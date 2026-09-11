@@ -1,0 +1,2565 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>App Cuca Fácil</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --laranja: #E85B4A;
+    --azul: #1C3B67;
+    --azul-claro: #eef2f7;
+    --cinza: #6b7280;
+    --cinza-claro: #f7f7f8;
+    --branco: #ffffff;
+    --verde: #2e7d5b;
+    --vermelho: #c0392b;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
+    background: var(--cinza-claro);
+    color: #24303f;
+  }
+  header {
+    background: var(--azul);
+    color: white;
+    padding: 22px 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .logo {
+    width: 42px; height: 42px;
+    flex-shrink: 0;
+  }
+  header h1 {
+    font-size: 18px;
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+  header p {
+    margin: 2px 0 0;
+    font-size: 12.5px;
+    opacity: 0.8;
+  }
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 28px 24px 60px;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 22px;
+  }
+  .card {
+    background: var(--branco);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e6e9ee;
+    box-shadow: 0 1px 2px rgba(28,59,103,0.04);
+  }
+  .card h2 {
+    font-size: 14px;
+    margin: 0 0 4px;
+    color: var(--azul);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tag {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .tag.ativo { background: #e4f3ea; color: var(--verde); }
+  .tag.pendente { background: #fbeceb; color: var(--laranja); }
+  .tag.config { background: #e9edf5; color: var(--azul); }
+  .card p.desc {
+    font-size: 12.5px;
+    color: var(--cinza);
+    margin: 6px 0 16px;
+  }
+  .dropzone {
+    border: 2px dashed #cfd8e3;
+    border-radius: 10px;
+    padding: 26px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.15s;
+    background: var(--azul-claro);
+  }
+  .dropzone:hover, .dropzone.dragover {
+    border-color: var(--laranja);
+    background: #fdf1ef;
+  }
+  .dropzone svg { margin-bottom: 8px; }
+  .dropzone .titulo { font-weight: 600; font-size: 13.5px; color: var(--azul); }
+  .dropzone .sub { font-size: 11.5px; color: var(--cinza); margin-top: 3px; }
+  input[type=file] { display: none; }
+  .disabled-zone {
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  .filename {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--azul);
+    font-weight: 600;
+    text-align: center;
+  }
+  .resultado {
+    background: var(--branco);
+    border-radius: 12px;
+    border: 1px solid #e6e9ee;
+    padding: 22px;
+    display: none;
+  }
+  .resultado.show { display: block; }
+  .resultado-topo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .resultado-topo h2 { font-size: 15px; margin: 0; color: var(--azul); }
+  .resumo {
+    display: flex;
+    gap: 18px;
+    font-size: 12px;
+    color: var(--cinza);
+  }
+  .resumo b { color: #24303f; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+  thead th {
+    text-align: left;
+    background: var(--azul-claro);
+    color: var(--azul);
+    padding: 9px 10px;
+    font-weight: 600;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+  tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #eef1f5;
+  }
+  tbody tr:hover { background: #fafbfc; }
+  .valor.credito { color: var(--verde); font-weight: 600; }
+  .valor.debito { color: var(--vermelho); font-weight: 600; }
+  .acoes {
+    display: flex;
+    gap: 10px;
+    margin-top: 18px;
+  }
+  button.exportar {
+    background: var(--laranja);
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  button.exportar:hover { background: #d6503f; }
+  button.limpar {
+    background: transparent;
+    color: var(--cinza);
+    border: 1px solid #d8dde3;
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #e2e6ec;
+  }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--cinza);
+    padding: 10px 16px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+  }
+  .tab-btn.active {
+    color: var(--laranja);
+    border-bottom-color: var(--laranja);
+  }
+  table.tabela-editavel {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  table.tabela-editavel thead th {
+    background: var(--azul-claro);
+    color: var(--azul);
+    text-align: left;
+    padding: 7px 6px;
+    font-weight: 600;
+    font-size: 10.5px;
+    text-transform: uppercase;
+  }
+  table.tabela-editavel td {
+    padding: 4px 4px;
+    border-bottom: 1px solid #eef1f5;
+  }
+  table.tabela-editavel input, table.tabela-editavel select {
+    width: 100%;
+    font-family: inherit;
+    font-size: 12px;
+    border: 1px solid #d8dde3;
+    border-radius: 5px;
+    padding: 5px 6px;
+  }
+  table.tabela-editavel input:focus, table.tabela-editavel select:focus {
+    outline: none;
+    border-color: var(--laranja);
+  }
+  .btn-vincular-duplicata {
+    background: transparent;
+    border: 1px solid var(--laranja);
+    color: var(--laranja);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-vincular-duplicata:hover { background: #fdf1ef; }
+  .btn-excluir-transacao {
+    background: transparent;
+    border: none;
+    color: var(--vermelho);
+    font-size: 16px;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  .btn-remover-linha {
+    background: transparent;
+    border: none;
+    color: var(--vermelho);
+    font-size: 15px;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  .grid-config {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .grid-config label {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--azul);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  .grid-config input {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 400;
+    color: #24303f;
+    border: 1px solid #d8dde3;
+    border-radius: 7px;
+    padding: 8px 10px;
+  }
+  .grid-config input:focus {
+    outline: none;
+    border-color: var(--laranja);
+  }
+  .aviso {
+    background: #fdf1ef;
+    border: 1px solid #f6d3ce;
+    color: #9a3b2c;
+    font-size: 12px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-top: 14px;
+    display: none;
+  }
+  .aviso.show { display: block; }
+  .rodape-nota {
+    margin-top: 26px;
+    font-size: 11.5px;
+    color: var(--cinza);
+    text-align: center;
+  }
+  /* ---- Módulo Conversor de PDF (composição de cobranças) ---- */
+  #cc-dropzone {
+    border: 2px dashed #C7CEDB;
+    border-radius: 12px;
+    padding: 34px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: .15s;
+    background: #FAFBFD;
+  }
+  #cc-dropzone:hover, #cc-dropzone.drag {
+    border-color: var(--laranja);
+    background: #FFF4F2;
+  }
+  #cc-dropzone .cc-icon { font-size: 30px; margin-bottom: 6px; }
+  #cc-dropzone .cc-main-txt { font-weight: 600; font-size: 14px; color: #24303f; }
+  #cc-dropzone .cc-sub-txt { font-size: 12px; color: var(--cinza); margin-top: 4px; }
+  .cc-filelist { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .cc-filerow {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 12.5px;
+    background: #F5F6F9;
+    border: 1px solid #e3e6ec;
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+  .cc-filerow .cc-fname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cc-filerow .cc-fstatus { font-size: 11px; color: var(--cinza); white-space: nowrap; }
+  .cc-filerow .cc-fstatus.ok { color: var(--verde); }
+  .cc-filerow .cc-fstatus.err { color: var(--vermelho); }
+  .cc-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .cc-stat { background: #F8F9FC; border: 1px solid #e3e6ec; border-radius: 10px; padding: 12px 14px; }
+  .cc-stat .cc-num { font-size: 19px; font-weight: 700; color: var(--azul); }
+  .cc-stat .cc-lbl { font-size: 11px; color: var(--cinza); margin-top: 2px; }
+  .cc-validate {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12.5px;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 16px;
+  }
+  .cc-validate.ok { background: #EAF7EF; color: var(--verde); border: 1px solid #C6E9D3; }
+  .cc-validate.warn { background: #FDF3E3; color: #B9770E; border: 1px solid #F1DDAE; }
+  .cc-tablewrap { overflow: auto; max-height: 460px; border: 1px solid #e3e6ec; border-radius: 10px; }
+  .cc-tablewrap table { border-collapse: collapse; width: 100%; font-size: 12px; }
+  .cc-tablewrap thead th {
+    position: sticky; top: 0;
+    background: var(--azul);
+    color: #fff;
+    text-align: left;
+    padding: 9px 10px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .cc-tablewrap tbody td { padding: 7px 10px; border-bottom: 1px solid #EFF1F5; white-space: nowrap; }
+  .cc-tablewrap tbody td.cc-desc-col, .cc-tablewrap thead th.cc-desc-col { white-space: normal; min-width: 170px; }
+  .cc-tablewrap tbody td.cc-morador-col { white-space: normal; min-width: 220px; }
+  .cc-tablewrap tbody tr:hover { background: #FAFBFD; }
+  .cc-tablewrap tbody tr:nth-child(even) { background: #FCFCFD; }
+  .cc-num-cell { text-align: right; font-variant-numeric: tabular-nums; }
+  .cc-rm-btn { border: none; background: none; color: var(--vermelho); cursor: pointer; font-size: 14px; line-height: 1; padding: 2px 6px; border-radius: 5px; }
+  .cc-rm-btn:hover { background: #FDEBEA; }
+  .cc-spinner {
+    width: 14px; height: 14px; border-radius: 50%;
+    border: 2px solid rgba(28,59,103,.25);
+    border-top-color: var(--azul);
+    animation: cc-spin .7s linear infinite;
+    display: inline-block;
+  }
+  @keyframes cc-spin { to { transform: rotate(360deg); } }
+  /* ---- Tela de login (senha de acesso ao app) ---- */
+  #login-gate {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: linear-gradient(135deg, var(--azul) 0%, #142c4f 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .login-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 40px 36px;
+    max-width: 340px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,.35);
+  }
+  .login-logo { width: 64px; height: 64px; object-fit: contain; margin-bottom: 12px; }
+  .login-titulo { font-size: 19px; font-weight: 700; color: var(--azul); margin: 0 0 4px; }
+  .login-sub { font-size: 12.5px; color: var(--cinza); margin: 0 0 20px; }
+  .login-campo-senha {
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  #login-senha-input {
+    flex: 1;
+    min-width: 0;
+    font-family: inherit;
+    font-size: 14px;
+    text-align: center;
+    letter-spacing: 2px;
+    border: 1px solid #d8dde3;
+    border-radius: 8px;
+    padding: 11px 12px;
+    box-sizing: border-box;
+  }
+  #login-senha-input:focus { outline: none; border-color: var(--laranja); }
+  #login-ver-senha-btn {
+    flex: 0 0 auto;
+    width: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    line-height: 1;
+    color: var(--cinza);
+    background: #F5F6F9;
+    border: 1px solid #d8dde3;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: .15s;
+  }
+  #login-ver-senha-btn:hover { background: #ECEEF2; }
+  #login-entrar-btn {
+    width: 100%;
+    background: var(--laranja);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 12px;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: .15s;
+  }
+  #login-entrar-btn:hover { background: #d54a39; }
+  #login-erro {
+    font-size: 12px;
+    color: var(--vermelho);
+    min-height: 16px;
+    margin: 10px 0 0;
+  }
+  .login-shake { animation: login-shake .35s; }
+  @keyframes login-shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-8px); }
+    40% { transform: translateX(8px); }
+    60% { transform: translateX(-6px); }
+    80% { transform: translateX(6px); }
+  }
+  /* ---- Caixa de ajuda "como usar esta aba" ---- */
+  .ajuda-box {
+    background: #EEF3FA;
+    border: 1px solid #D3E0F0;
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 22px;
+  }
+  .ajuda-box h3 { margin: 0; font-size: 14px; color: var(--azul); }
+  .ajuda-box ol { margin: 10px 0 0; padding-left: 20px; }
+  .ajuda-box ol li { font-size: 12.5px; color: #24303f; margin-bottom: 7px; line-height: 1.55; }
+  .ajuda-box ol li:last-child { margin-bottom: 0; }
+  .ajuda-toggle {
+    background: none;
+    border: none;
+    color: var(--azul);
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    margin-top: 10px;
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+
+<div id="login-gate">
+  <div class="login-card">
+    <img class="login-logo" src="data:image/png;base64,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" alt="Logo França">
+    <h1 class="login-titulo">App Cuca Fácil</h1>
+    <p class="login-sub">Digite a senha de acesso para continuar</p>
+    <div class="login-campo-senha">
+      <input type="password" id="login-senha-input" placeholder="Senha" autocomplete="off">
+      <button type="button" id="login-ver-senha-btn" title="Mostrar/ocultar senha">
+        <svg id="login-icone-olho" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+      </button>
+    </div>
+    <button id="login-entrar-btn">Entrar</button>
+    <p id="login-erro"></p>
+  </div>
+</div>
+
+
+<header>
+  <img class="logo" src="data:image/png;base64,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" alt="Logo França">
+  <div>
+    <h1>App Cuca Fácil</h1>
+    <p>ContábilPro · Extrato, Duplicatas, De-Para e Conversor de PDF — Cuca Fresca / Escritório Inteligente</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-btn-extrato" data-tab="extrato">Extrato → Diário</button>
+    <button class="tab-btn" id="tab-btn-duplicatas" data-tab="duplicatas">Baixa de Duplicatas</button>
+    <button class="tab-btn" id="tab-btn-depara" data-tab="depara">De-Para</button>
+    <button class="tab-btn" id="tab-btn-cobrancas" data-tab="cobrancas">Conversor de PDF</button>
+  </div>
+
+  <div class="card" style="margin-bottom:20px; padding:14px 18px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+    <label style="font-size:11.5px; font-weight:600; color:var(--azul); display:flex; align-items:center; gap:8px;">
+      Cliente (regras De-Para)
+      <select id="depara-select-cliente" style="font-family:inherit; font-size:13px; font-weight:400; color:#24303f; border:1px solid #d8dde3; border-radius:7px; padding:7px 10px; min-width:220px;"></select>
+    </label>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <button class="limpar" id="btn-depara-novo-cliente" style="padding:6px 14px; font-size:12px;">+ Novo cliente</button>
+      <button class="limpar" id="btn-depara-renomear-cliente" style="padding:6px 14px; font-size:12px;">Renomear</button>
+      <button class="limpar" id="btn-depara-excluir-cliente" style="padding:6px 14px; font-size:12px; border-color:var(--vermelho); color:var(--vermelho);">Excluir cliente</button>
+    </div>
+    <span style="font-size:11px; color:var(--cinza);">As regras de De-Para do cliente selecionado valem tanto na aba De-Para quanto na Extrato → Diário.</span>
+
+    <div style="width:100%; display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:4px; padding-top:10px; border-top:1px solid #eef0f3;">
+      <span style="font-size:11px; font-weight:600; color:var(--azul); white-space:nowrap;">Sincronização em nuvem:</span>
+      <input type="text" id="depara-sync-url" placeholder="Cole aqui a URL do Apps Script (termina em /exec)" style="flex:1; min-width:220px; font-family:inherit; font-size:12px; border:1px solid #d8dde3; border-radius:7px; padding:6px 9px;">
+      <input type="password" id="depara-sync-senha" placeholder="Senha" style="width:110px; font-family:inherit; font-size:12px; border:1px solid #d8dde3; border-radius:7px; padding:6px 9px;">
+      <button class="limpar" id="btn-depara-sync-salvar" style="padding:6px 14px; font-size:12px;">Salvar link</button>
+      <button class="limpar" id="btn-depara-sync-remover" style="padding:6px 14px; font-size:12px;">Desativar</button>
+      <span id="depara-sync-status" style="font-size:11px; color:var(--cinza); white-space:nowrap;"></span>
+    </div>
+  </div>
+
+  <div class="tab-view" id="view-extrato">
+
+    <div class="ajuda-box">
+      <h3>❓ Como usar esta aba</h3>
+      <ol>
+        <li>Se ainda não preencheu, complete os dados do cliente (CNPJ, conta bancária) no topo — só precisa fazer isso uma vez.</li>
+        <li>Arraste o extrato do banco (arquivo .OFX ou PDF) para a caixa de upload, ou clique nela para escolher o arquivo do seu computador.</li>
+        <li>A ferramenta lista os lançamentos sozinha. As linhas com o selo "✓ De-Para" já foram classificadas automaticamente.</li>
+        <li>Nas linhas sem classificação, preencha a conta na mão ou clique em "+ De-Para" para criar uma regra ali mesmo, na hora.</li>
+        <li>Confira tudo e clique em "Baixar arquivo do diário" — depois é só importar esse arquivo no Cuca Fresca.</li>
+      </ol>
+      <button type="button" class="ajuda-toggle">▲ Ocultar ajuda</button>
+    </div>
+  <div class="cards">
+    <div class="card">
+      <h2>Arquivo OFX <span class="tag ativo">Disponível</span></h2>
+      <p class="desc">Importe o extrato em OFX enviado pelo cliente. As transações são extraídas automaticamente para conferência.</p>
+      <div class="dropzone" id="dropzone-ofx">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#1C3B67" stroke-width="1.6"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+        <div class="titulo">Clique ou arraste o arquivo .OFX</div>
+        <div class="sub">Formato OFX 1.x / 2.x</div>
+        <input type="file" id="input-ofx" accept=".ofx">
+        <div class="filename" id="filename-ofx"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Extrato em PDF <span class="tag ativo">Disponível</span></h2>
+      <p class="desc">Para clientes que têm dificuldade em gerar OFX. Bancos reconhecidos hoje: Gerenciador CAIXA, C6 Bank, Santander, Itaú e Banco do Brasil. Funciona com PDFs gerados direto do site/app do banco — não com PDF escaneado/foto.</p>
+      <div class="dropzone" id="dropzone-pdf">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#1C3B67" stroke-width="1.6"><path d="M6 2h9l5 5v13a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z"/><path d="M15 2v5h5"/></svg>
+        <div class="titulo">Clique ou arraste o arquivo .PDF</div>
+        <div class="sub">Extrato Gerenciador CAIXA (por período)</div>
+        <input type="file" id="input-pdf" accept=".pdf">
+        <div class="filename" id="filename-pdf"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="card-config" style="display:none; margin-bottom:22px;">
+    <h2>Dados do lançamento <span class="tag config">Configuração por cliente</span></h2>
+    <p class="desc">Preencha uma vez para este cliente. Esses dados vão em todas as linhas do arquivo de importação do diário.</p>
+    <div class="grid-config">
+      <label>CNPJ da empresa
+        <input type="text" id="cfg-cnpj" placeholder="00.000.000/0000-00" maxlength="18">
+      </label>
+      <label>Código agilizador
+        <input type="text" id="cfg-agilizador" placeholder="999-9" maxlength="5">
+      </label>
+      <label>Conta do banco (devedora/credora)
+        <input type="text" id="cfg-conta-banco" placeholder="999.999-9 9999" maxlength="14">
+      </label>
+      <label>Conta de contrapartida padrão
+        <input type="text" id="cfg-conta-contra" placeholder="999.999-9 9999" maxlength="14">
+      </label>
+      <label>Código do histórico padrão
+        <input type="text" id="cfg-hist-codigo" placeholder="000" maxlength="3" value="000">
+      </label>
+    </div>
+  </div>
+
+  <div class="resultado" id="resultado">
+    <div class="resultado-topo">
+      <h2>Transações extraídas</h2>
+      <div class="resumo">
+        <span>Lançamentos: <b id="resumo-qtd">0</b></span>
+        <span>Créditos: <b id="resumo-credito" style="color:#2e7d5b">R$ 0,00</b></span>
+        <span>Débitos: <b id="resumo-debito" style="color:#c0392b">R$ 0,00</b></span>
+        <span>Classificados por De-Para: <b id="resumo-depara">0</b></span>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:95px">Data</th>
+            <th>Histórico</th>
+            <th style="width:75px">Tipo</th>
+            <th style="width:110px; text-align:right">Valor</th>
+            <th style="width:150px">Contrapartida</th>
+            <th style="width:70px">Cód. Hist.</th>
+            <th style="width:85px"></th>
+            <th style="width:90px"></th>
+            <th style="width:30px"></th>
+          </tr>
+        </thead>
+        <tbody id="tbody-transacoes"></tbody>
+      </table>
+    </div>
+
+    <div class="aviso" id="aviso-formato">
+      Preencha os dados do cliente acima antes de gerar o arquivo do diário. Lançamentos que combinarem com uma regra de De-Para usam a conta e o código de histórico cadastrados automaticamente; os demais usam a conta de contrapartida padrão informada acima. Você pode ajustar qualquer linha manualmente na tabela.
+    </div>
+
+    <div class="acoes">
+      <button class="exportar" id="btn-exportar-diario">Gerar arquivo do diário (.txt)</button>
+      <button class="limpar" id="btn-exportar-csv" style="border:1px solid #d8dde3; background:transparent; color:var(--azul); font-weight:600;">Baixar planilha de conferência (CSV)</button>
+      <button class="limpar" id="btn-limpar">Limpar</button>
+    </div>
+  </div>
+
+  <p class="rodape-nota">Ferramenta interna · ContábilPro — leitura de extratos para apoio à baixa no diário</p>
+  </div>
+
+  <div class="tab-view" id="view-duplicatas" style="display:none;">
+
+    <div class="ajuda-box">
+      <h3>❓ Como usar esta aba</h3>
+      <ol>
+        <li>Traga os dados de duas formas: clique em "Importar relatório PDF (Débitos a Baixar)" para importar direto do relatório do Cuca Fresca, ou em "Colar de planilha" para colar dados de um Excel/Google Sheets.</li>
+        <li>Confira a tabela — cada linha é uma duplicata, com cliente, valor e vencimento.</li>
+        <li>Corrija o que precisar direto nas células da tabela.</li>
+        <li>Clique em "Baixar arquivo" para gerar o arquivo de baixa e importe no Cuca Fresca.</li>
+      </ol>
+      <button type="button" class="ajuda-toggle">▲ Ocultar ajuda</button>
+    </div>
+
+    <div class="card" style="margin-bottom:22px;">
+      <h2>Dados fixos da empresa <span class="tag config">Configuração por cliente</span></h2>
+      <p class="desc">CNPJ do cliente e código da conta de pagamento usados em todas as linhas do arquivo de baixa.</p>
+      <div class="grid-config">
+        <label>CNPJ da empresa
+          <input type="text" id="dup-cnpj-empresa" placeholder="00.000.000/0000-00" maxlength="18">
+        </label>
+        <label>Número da conta de pagamento
+          <input type="text" id="dup-conta-pagamento" placeholder="100.005-5" maxlength="9">
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; flex-wrap:wrap; gap:8px;">
+        <h2 style="margin:0;">Duplicatas para baixar</h2>
+        <div style="display:flex; gap:8px;">
+          <button class="limpar" id="btn-importar-relatorio-debitos" style="padding:6px 14px; font-size:12px;">Importar relatório PDF (Débitos a Baixar)</button>
+          <button class="limpar" id="btn-colar-planilha" style="padding:6px 14px; font-size:12px;">Colar de planilha</button>
+          <button class="limpar" id="btn-add-linha" style="padding:6px 14px; font-size:12px;">+ Adicionar linha</button>
+        </div>
+      </div>
+      <p class="desc">Uma linha por duplicata, com os dados já cadastrados no Cuca Fresca. Você pode importar direto o relatório "C/C Clientes - Débitos a Baixar (por cliente)" em PDF — o Tipo é preenchido automaticamente (NFSE → P - Serviço, NFE → E - Entrada, ajustável por linha) e o valor a baixar vem do "Saldo a Baixar" de cada nota. Vencimento, Data da baixa e Valor baixado não constam nesse relatório — preencha conforme o pagamento for confirmado.</p>
+      <input type="file" id="input-relatorio-debitos" accept=".pdf" style="display:none;">
+
+      <div id="bloco-colar-planilha" style="display:none; margin-bottom:16px;">
+        <p class="desc" style="margin-bottom:8px;">
+          No Excel, deixe as colunas nesta ordem: <b>Tipo, Data doc., Espécie, Nº documento, CNPJ, Nº baixa/parcela, Vencimento, Valor a baixar, Data da baixa, Valor baixado</b>.
+          Selecione as células (sem cabeçalho), copie (Ctrl+C) e cole aqui embaixo.
+        </p>
+        <textarea id="textarea-colar" rows="6" style="width:100%; font-family:inherit; font-size:12px; border:1px solid #d8dde3; border-radius:8px; padding:10px;" placeholder="Cole aqui as linhas copiadas do Excel..."></textarea>
+        <div class="acoes" style="margin-top:10px;">
+          <button class="exportar" id="btn-processar-colagem" style="padding:8px 16px; font-size:12px;">Adicionar linhas</button>
+          <button class="limpar" id="btn-cancelar-colagem" style="padding:8px 16px; font-size:12px;">Cancelar</button>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table id="tabela-duplicatas" class="tabela-editavel">
+          <thead>
+            <tr>
+              <th style="min-width:70px">Tipo</th>
+              <th style="min-width:110px">Data doc.</th>
+              <th style="min-width:70px">Espécie</th>
+              <th style="min-width:130px">Nº documento</th>
+              <th style="min-width:150px">CNPJ fornec./cliente</th>
+              <th style="min-width:130px">Nº baixa/parcela</th>
+              <th style="min-width:110px">Vencimento</th>
+              <th style="min-width:110px">Valor a baixar</th>
+              <th style="min-width:110px">Data da baixa</th>
+              <th style="min-width:110px">Valor baixado</th>
+              <th style="width:30px"></th>
+            </tr>
+          </thead>
+          <tbody id="tbody-duplicatas"></tbody>
+        </table>
+      </div>
+
+      <div class="aviso show" style="margin-top:16px;">
+        As posições dos campos "Data Vencimento" e "Data da Baixa" vieram divergentes no leiaute enviado — usei a dedução mais provável pelo espaço disponível. Teste a importação com 1 ou 2 linhas antes de gerar o arquivo completo.
+      </div>
+
+      <div class="acoes">
+        <button class="exportar" id="btn-exportar-duplicatas">Gerar arquivo de baixa (.txt)</button>
+      </div>
+    </div>
+
+    <p class="rodape-nota">Ferramenta interna · ContábilPro — baixa de duplicatas via conta corrente</p>
+  </div>
+
+  <div class="tab-view" id="view-depara" style="display:none;">
+
+    <div class="ajuda-box">
+      <h3>❓ Como usar esta aba</h3>
+      <ol>
+        <li>Escolha o cliente no menu no topo da tela (ou clique em "+ Novo cliente" se for a primeira vez com ele).</li>
+        <li>Clique em "+ Nova regra".</li>
+        <li>Em "Padrão no histórico", digite um pedaço do texto que aparece no extrato desse cliente (por exemplo: TARIFA PACOTE).</li>
+        <li>Em "Conta contábil", digite a conta que deve ser usada sempre que esse texto aparecer.</li>
+        <li>Repita para cada tipo de lançamento recorrente. Fica salvo sozinho, sem precisar clicar em nada.</li>
+        <li>Essas regras passam a ser usadas automaticamente na aba Extrato → Diário.</li>
+      </ol>
+      <button type="button" class="ajuda-toggle">▲ Ocultar ajuda</button>
+    </div>
+
+    <div class="card" style="margin-bottom:22px;">
+      <h2>De-Para (histórico → conta contábil) <span class="tag config">Configuração por cliente</span></h2>
+      <p class="desc">Cadastre os padrões de texto que aparecem no histórico do extrato deste cliente. Ao importar um novo extrato (OFX ou PDF), a ferramenta preenche automaticamente a conta de contrapartida e o código de histórico de cada lançamento que combinar com uma regra. As regras ficam salvas neste navegador — use "Exportar" para guardar uma cópia ou levar para outro computador.</p>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+        <input type="text" id="depara-busca" placeholder="Pesquisar por padrão..." style="flex:1; min-width:180px; font-family:inherit; font-size:12.5px; border:1px solid #d8dde3; border-radius:7px; padding:8px 10px;">
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="limpar" id="btn-depara-importar" style="padding:6px 14px; font-size:12px;">Importar (JSON)</button>
+          <button class="limpar" id="btn-depara-exportar" style="padding:6px 14px; font-size:12px;">Exportar (JSON)</button>
+          <button class="limpar" id="btn-depara-preencher-multiplas" style="padding:6px 14px; font-size:12px;">Preencher Múltiplas Contas</button>
+          <button class="limpar" id="btn-depara-add" style="padding:6px 14px; font-size:12px;">+ Nova regra</button>
+        </div>
+        <input type="file" id="input-depara-importar" accept=".json" style="display:none;">
+      </div>
+
+      <div id="bloco-preencher-multiplas" style="display:none; margin-bottom:14px; background:var(--azul-claro); border-radius:8px; padding:12px 14px;">
+        <p class="desc" style="margin:0 0 8px;">Preenche a Conta contábil e/ou o Cód. Hist. de todas as regras <b>selecionadas</b> na tabela abaixo (marque as caixinhas na primeira coluna). Deixe em branco o campo que não quer alterar.</p>
+        <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:flex-end;">
+          <label style="font-size:11.5px; font-weight:600; color:var(--azul);">Conta contábil
+            <input type="text" id="pm-conta" placeholder="999.999-9 9999" maxlength="14" style="display:block; margin-top:4px; font-family:inherit; font-size:12.5px; border:1px solid #d8dde3; border-radius:6px; padding:6px 8px;">
+          </label>
+          <label style="font-size:11.5px; font-weight:600; color:var(--azul);">Cód. Hist.
+            <input type="text" id="pm-codhist" placeholder="000" maxlength="3" style="display:block; margin-top:4px; font-family:inherit; font-size:12.5px; border:1px solid #d8dde3; border-radius:6px; padding:6px 8px; width:80px;">
+          </label>
+          <button class="exportar" id="btn-pm-aplicar" style="padding:8px 16px; font-size:12px;">Aplicar às selecionadas</button>
+          <button class="limpar" id="btn-pm-cancelar" style="padding:8px 16px; font-size:12px;">Cancelar</button>
+          <span id="pm-contagem" style="font-size:11.5px; color:var(--cinza);"></span>
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:10px;">
+        <label style="font-size:12px; color:var(--cinza); display:flex; align-items:center; gap:6px;">
+          <input type="checkbox" id="depara-apenas-pendentes"> Apenas pendentes (sem conta contábil preenchida)
+        </label>
+        <label style="font-size:12px; color:var(--cinza); display:flex; align-items:center; gap:6px;">
+          <input type="checkbox" id="depara-definir-todas-sem-uso"> Definir todas as regras visíveis como sem uso
+        </label>
+      </div>
+
+      <div style="display:flex; justify-content:flex-end; align-items:center; gap:6px; margin-bottom:8px;">
+        <select id="depara-por-pagina" style="font-family:inherit; font-size:12px; border:1px solid #d8dde3; border-radius:6px; padding:5px 7px;">
+          <option value="10">10</option>
+          <option value="25" selected>25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+        <span style="font-size:12px; color:var(--cinza);">resultados por página</span>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table id="tabela-depara" class="tabela-editavel">
+          <thead>
+            <tr>
+              <th style="width:30px"><input type="checkbox" id="depara-selecionar-todas" title="Selecionar todas as visíveis"></th>
+              <th style="min-width:220px">Padrão no histórico</th>
+              <th style="min-width:150px">Conta contábil (contrapartida)</th>
+              <th style="min-width:80px">Cód. Hist.</th>
+              <th style="min-width:200px">Histórico padrão (opcional)</th>
+              <th style="width:70px; text-align:center">Sem uso</th>
+              <th style="width:30px"></th>
+            </tr>
+          </thead>
+          <tbody id="tbody-depara"></tbody>
+        </table>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; margin-top:12px;">
+        <span id="depara-resumo-paginacao" style="font-size:11.5px; color:var(--cinza);"></span>
+        <div style="display:flex; gap:6px; align-items:center;" id="depara-paginacao-botoes"></div>
+      </div>
+
+      <p class="rodape-nota" id="depara-vazio" style="display:none; margin-top:16px;">Nenhuma regra cadastrada ainda. Clique em "+ Nova regra" ou use o botão "+ De-Para" em um lançamento não classificado na aba Extrato → Diário.</p>
+
+      <div class="aviso show" style="margin-top:16px;">
+        O casamento é feito por texto contido no histórico (não precisa ser igual — só precisa aparecer). Quando mais de uma regra combinar com o mesmo lançamento, vence a regra com o padrão mais longo (mais específico).
+      </div>
+    </div>
+
+    <p class="rodape-nota">Ferramenta interna · ContábilPro — classificação automática de lançamentos por histórico</p>
+  </div>
+
+  <div class="tab-view" id="view-cobrancas" style="display:none;">
+
+    <div class="ajuda-box">
+      <h3>❓ Como usar esta aba</h3>
+      <ol>
+        <li>Arraste o PDF do relatório "Composição das cobranças por liquidação" para a caixa de upload (pode soltar vários arquivos de uma vez).</li>
+        <li>A ferramenta lê o arquivo e monta a tabela sozinha, com uma linha para cada cobrança.</li>
+        <li>Veja o resumo no topo (quantas linhas, quantos moradores, valor total). Se aparecer um aviso amarelo, o total não bateu com o do relatório — vale conferir as linhas.</li>
+        <li>Se alguma linha estiver errada, clique no ✕ dela para remover.</li>
+        <li>No Excel gerado, as linhas de "Taxa Associativa" saem somadas por Data de Crédito (uma linha por data, sem nome de morador); as demais descrições saem uma linha por lançamento, como aparecem na tela.</li>
+        <li>Clique em "Baixar Excel (.xlsx)" para gerar a planilha pronta.</li>
+      </ol>
+      <button type="button" class="ajuda-toggle">▲ Ocultar ajuda</button>
+    </div>
+
+    <div class="card" style="margin-bottom:22px;">
+      <h2>1. Envie o(s) PDF(s)</h2>
+      <p class="desc">
+        Relatório "Composição das cobranças por liquidação" (Escritório Inteligente / gestoras condominiais).
+        A ferramenta identifica cada morador e repete o nome dele em cada linha de cobrança,
+        ignorando os subtotais por lote e os cabeçalhos/rodapés de página — pronta para gerar
+        um Excel simples de importar. No Excel gerado, os lançamentos de "Taxa Associativa" são
+        agrupados e somados por Data de Crédito (morador, cobrança e demais campos ficam em branco
+        nessas linhas); as demais descrições (Juros, Multas, Acordo, Salão de Festas etc.) continuam
+        uma linha por lançamento, com todos os campos preenchidos.
+      </p>
+      <div id="cc-dropzone">
+        <div class="cc-icon">📄</div>
+        <div class="cc-main-txt">Arraste o PDF aqui ou clique para selecionar</div>
+        <div class="cc-sub-txt">Aceita vários arquivos PDF de uma vez</div>
+        <input type="file" id="cc-file-input" accept="application/pdf" multiple style="display:none;">
+      </div>
+      <div class="cc-filelist" id="cc-filelist"></div>
+    </div>
+
+    <div class="card" id="cc-results-card" style="display:none; margin-bottom:22px;">
+      <h2>2. Conferir e exportar</h2>
+      <p class="desc">Confira os dados extraídos abaixo. Se algo estiver errado, remova a linha antes de baixar.</p>
+
+      <div class="cc-stats" id="cc-stats"></div>
+      <div id="cc-validate-box"></div>
+
+      <div class="toolbar" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin-bottom:14px;">
+        <label style="display:flex; align-items:center; gap:8px; font-size:12.5px; color:#24303f;">
+          <input type="checkbox" id="cc-include-header" style="width:15px; height:15px; accent-color:var(--laranja);">
+          Incluir linha de cabeçalho (Morador, Cobrança, Descrição...)
+        </label>
+        <button class="exportar" id="cc-download-btn" disabled>⬇ Baixar Excel (.xlsx)</button>
+      </div>
+
+      <div class="cc-tablewrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="cc-morador-col">Morador</th>
+              <th>Cobrança</th>
+              <th class="cc-desc-col">Descrição</th>
+              <th>Geração</th>
+              <th>Vencimento</th>
+              <th>Liquidação</th>
+              <th>Crédito</th>
+              <th>Valor</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="cc-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" id="cc-empty-card">
+      <p class="rodape-nota" style="padding:20px 0;">Nenhum arquivo processado ainda.</p>
+    </div>
+
+    <p class="rodape-nota">Ferramenta interna · ContábilPro — conversão do relatório de composição de cobranças condominiais em Excel · processamento 100% local no navegador</p>
+  </div>
+
+</div>
+
+<script>
+// ---- Caixas de ajuda "como usar esta aba": mostrar/ocultar ----
+document.querySelectorAll('.ajuda-toggle').forEach(botao => {
+  botao.addEventListener('click', () => {
+    const lista = botao.previousElementSibling;
+    const oculta = lista.style.display === 'none';
+    lista.style.display = oculta ? '' : 'none';
+    botao.textContent = oculta ? '▲ Ocultar ajuda' : '❓ Mostrar ajuda';
+  });
+});
+
+
+// ---- Tela de login (senha de acesso ao app inteiro) ----
+const SENHA_ACESSO_APP = '36426692';
+const CHAVE_LOGIN_OK = 'appCucaFacil_logado_v1';
+
+(function () {
+  const gate = document.getElementById('login-gate');
+  try {
+    if (localStorage.getItem(CHAVE_LOGIN_OK) === 'true') {
+      gate.style.display = 'none';
+      return;
+    }
+  } catch (err) { /* sem localStorage: pede senha sempre */ }
+
+  const input = document.getElementById('login-senha-input');
+  const btn = document.getElementById('login-entrar-btn');
+  const btnVerSenha = document.getElementById('login-ver-senha-btn');
+  const erro = document.getElementById('login-erro');
+  const card = gate.querySelector('.login-card');
+  const iconeOlhoHtml = btnVerSenha.innerHTML;
+
+  btnVerSenha.addEventListener('click', () => {
+    const mostrando = input.type === 'text';
+    input.type = mostrando ? 'password' : 'text';
+    btnVerSenha.innerHTML = mostrando ? iconeOlhoHtml : '🙈'; // tapa os olhos quando a senha está visível
+    input.focus();
+  });
+
+  function tentarEntrar() {
+    if (input.value === SENHA_ACESSO_APP) {
+      try { localStorage.setItem(CHAVE_LOGIN_OK, 'true'); } catch (err) { /* ignora */ }
+      gate.style.display = 'none';
+    } else {
+      erro.textContent = 'Senha incorreta.';
+      card.classList.remove('login-shake');
+      void card.offsetWidth; // reinicia a animação
+      card.classList.add('login-shake');
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  btn.addEventListener('click', tentarEntrar);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') tentarEntrar(); });
+  input.focus();
+})();
+
+
+const dropzone = document.getElementById('dropzone-ofx');
+const inputOfx = document.getElementById('input-ofx');
+const filenameEl = document.getElementById('filename-ofx');
+const resultado = document.getElementById('resultado');
+const tbody = document.getElementById('tbody-transacoes');
+const avisoFormato = document.getElementById('aviso-formato');
+let transacoesAtuais = [];
+
+dropzone.addEventListener('click', () => inputOfx.click());
+dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+dropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+inputOfx.addEventListener('change', e => {
+  if (e.target.files.length) handleFile(e.target.files[0]);
+});
+
+function handleFile(file) {
+  filenameEl.textContent = file.name;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      const transacoes = parseOFX(evt.target.result);
+      aplicarDePara(transacoes);
+      transacoesAtuais = transacoes;
+      renderTransacoes(transacoes);
+    } catch (err) {
+      alert('Não foi possível ler este arquivo OFX. Verifique se o formato está correto.');
+      console.error(err);
+    }
+  };
+  reader.readAsText(file, 'ISO-8859-1');
+}
+
+// ---- Importação de PDF (Extrato Gerenciador CAIXA) ----
+const dropzonePdf = document.getElementById('dropzone-pdf');
+const inputPdf = document.getElementById('input-pdf');
+const filenamePdfEl = document.getElementById('filename-pdf');
+
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+dropzonePdf.addEventListener('click', () => inputPdf.click());
+dropzonePdf.addEventListener('dragover', e => { e.preventDefault(); dropzonePdf.classList.add('dragover'); });
+dropzonePdf.addEventListener('dragleave', () => dropzonePdf.classList.remove('dragover'));
+dropzonePdf.addEventListener('drop', e => {
+  e.preventDefault();
+  dropzonePdf.classList.remove('dragover');
+  if (e.dataTransfer.files.length) handlePdfFile(e.dataTransfer.files[0]);
+});
+inputPdf.addEventListener('change', e => {
+  if (e.target.files.length) handlePdfFile(e.target.files[0]);
+});
+
+async function handlePdfFile(file) {
+  filenamePdfEl.textContent = file.name;
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const transacoes = await parsePdfExtrato(arrayBuffer);
+    if (!transacoes.length) {
+      alert('Não encontrei lançamentos reconhecíveis neste PDF. Ele precisa ser o PDF gerado direto do site do banco (não uma foto/escaneamento), e o layout do banco precisa já estar cadastrado na ferramenta.');
+      return;
+    }
+    aplicarDePara(transacoes);
+    transacoesAtuais = transacoes;
+    renderTransacoes(transacoes);
+  } catch (err) {
+    alert('Não foi possível ler este PDF.');
+    console.error(err);
+  }
+}
+
+// Cada entrada reconhece o layout de extrato de um banco/portal específico.
+// Para adicionar um banco novo: acrescentar um item nesta lista.
+const LAYOUTS_PDF_BANCOS = [
+  {
+    nome: 'Gerenciador CAIXA',
+    // 15/04/2026 140426 COB COMPE 2.313,28 C 133.976,44 C
+    regex: /^(\d{2}\/\d{2}\/\d{4})\s+(\S+)\s+(.+?)\s+([\d.]+,\d{2})\s+([CD])\s+([\d.]+,\d{2})\s+([CD])\s*$/,
+    extrair(m, anoDefault) {
+      const [, data, , historico, valorStr, tipoCD] = m;
+      if (historico.trim() === 'SALDO DIA') return null; // não é um lançamento real
+      const valorNum = parseFloat(valorStr.replace(/\./g, '').replace(',', '.'));
+      return { data, historico: historico.trim(), valor: tipoCD === 'D' ? -valorNum : valorNum };
+    }
+  },
+  {
+    nome: 'C6 Bank',
+    // 14/07 14/07 Entrada PIX Pix recebido de PJBANK PAGAMENTOS S.A. R$ 11.622,76
+    regex: /^(\d{2}\/\d{2})\s+\d{2}\/\d{2}\s+(.+?)\s+(-)?R\$\s?([\d.]+,\d{2})\s*$/,
+    extrair(m, anoDefault) {
+      const [, dataCurta, historico, sinalNeg, valorStr] = m;
+      if (/^saldo do dia/i.test(historico.trim())) return null; // não é um lançamento real
+      const valorNum = parseFloat(valorStr.replace(/\./g, '').replace(',', '.'));
+      return { data: `${dataCurta}/${anoDefault}`, historico: historico.trim(), valor: sinalNeg ? -valorNum : valorNum };
+    }
+  },
+  {
+    nome: 'Santander (Internet Banking Empresarial)',
+    // 01/06/2026 Pagamento De Boleto Outros Bancos PJBANK PAGAMENTOS S.A. - R$ 2.120,00
+    regex: /^(\d{2}\/\d{2}\/\d{4})\s+(.+?)\s+(-)?\s*R\$\s?([\d.]+,\d{2})\s*$/,
+    extrair(m, anoDefault) {
+      const [, data, historico, sinalNeg, valorStr] = m;
+      if (/^saldo/i.test(historico.trim())) return null; // linha de saldo, não é lançamento real
+      const valorNum = parseFloat(valorStr.replace(/\./g, '').replace(',', '.'));
+      return { data, historico: historico.trim(), valor: sinalNeg ? -valorNum : valorNum };
+    }
+  },
+  {
+    nome: 'Itaú (Lançamentos do período)',
+    // 13/05/2026 PIX RECEBIDO PJBANK 13/05 PJBANK PAGAMENTOS S.A. 18.191.228/0001-71 641,16
+    regex: /^(\d{2}\/\d{2}\/\d{4})\s+(.+?)\s+(-?[\d.]+,\d{2})\s*$/,
+    extrair(m, anoDefault) {
+      const [, data, historico, valorStr] = m;
+      if (/^saldo/i.test(historico.trim())) return null; // linha de saldo, não é lançamento real
+      const valorNum = parseFloat(valorStr.replace(/\./g, '').replace(',', '.'));
+      return { data, historico: historico.trim(), valor: valorNum };
+    }
+  },
+  {
+    nome: 'Banco do Brasil (Consultas - Extrato de conta corrente)',
+    // 04/05/2026 0000 13113 258 Tarifa Pix Enviado 831.241.200.231.154 10,00 D [Tar. agrupadas...]
+    // Pega sempre o PRIMEIRO valor+C/D da linha (é a coluna "Valor R$"; a coluna "Saldo", quando aparece, vem depois)
+    regex: /^(\d{2}\/\d{2}\/\d{4})\s+(.+?)\s+([\d.]+,\d{2})\s*([CD])\b/,
+    extrair(m, anoDefault) {
+      const [, data, historico, valorStr, tipoCD] = m;
+      const historicoSemEspacos = historico.replace(/\s+/g, '');
+      if (/saldo/i.test(historicoSemEspacos)) return null; // "Saldo Anterior" / "S A L D O" final, não é lançamento real
+      const valorNum = parseFloat(valorStr.replace(/\./g, '').replace(',', '.'));
+      return { data, historico: historico.trim(), valor: tipoCD === 'D' ? -valorNum : valorNum };
+    }
+  }
+];
+
+async function parsePdfExtrato(arrayBuffer) {
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const linhasTexto = [];
+
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+
+    // Agrupa itens por linha (mesma posição vertical aproximada)
+    const linhasMap = new Map();
+    content.items.forEach(item => {
+      const y = Math.round(item.transform[5]);
+      if (!linhasMap.has(y)) linhasMap.set(y, []);
+      linhasMap.get(y).push(item);
+    });
+
+    const linhasOrdenadas = Array.from(linhasMap.entries())
+      .sort((a, b) => b[0] - a[0]) // de cima para baixo
+      .map(([y, itens]) => itens.sort((a, b) => a.transform[4] - b.transform[4]).map(i => i.str).join(' '));
+
+    linhasTexto.push(...linhasOrdenadas);
+  }
+
+  // Para layouts com data sem ano (ex: C6 Bank "DD/MM"), pega o ano de alguma
+  // data completa (DD/MM/AAAA) que apareça em qualquer lugar do documento (cabeçalho, período etc.)
+  const textoCompleto = linhasTexto.join(' ');
+  const matchAno = textoCompleto.match(/\d{2}\/\d{2}\/(\d{4})/);
+  const anoDefault = matchAno ? matchAno[1] : new Date().getFullYear().toString();
+
+  // Remove linhas de cabeçalho/rodapé conhecidas (atendimento, ouvidoria, SAC, etc.)
+  const RUIDO_CABECALHO_RODAPE = /central de atendimento|ouvidoria|deficiente auditivo|www\.|http|ligue a cobrar|reclama[cç][oõ]es|internet banking empresarial|about:blank|^aviso:|capitais e regi[oõ]es|^0800|atualizado em|em caso de d[uú]vidas|sac\b/i;
+  const linhasFiltradas = linhasTexto
+    .map(l => l.replace(/\s+/g, ' ').trim())
+    .filter(l => l && !RUIDO_CABECALHO_RODAPE.test(l));
+
+  // Junta linhas que não começam com data — geralmente é texto de célula que
+  // quebrou em duas linhas (ex: razão social longa no extrato do Itaú)
+  const linhasMescladas = [];
+  linhasFiltradas.forEach(l => {
+    if (/^\d{2}\/\d{2}(\/\d{4})?\b/.test(l) || linhasMescladas.length === 0) {
+      linhasMescladas.push(l);
+    } else {
+      linhasMescladas[linhasMescladas.length - 1] += ' ' + l;
+    }
+  });
+
+  const transacoes = [];
+
+  linhasMescladas.forEach(linha => {
+    for (const layout of LAYOUTS_PDF_BANCOS) {
+      const m = linha.match(layout.regex);
+      if (!m) continue;
+      const transacao = layout.extrair(m, anoDefault);
+      if (transacao) transacoes.push(transacao);
+      break; // já reconheceu com esse layout, não tenta os outros nessa linha
+    }
+  });
+
+  return transacoes;
+}
+
+function parseOFX(texto) {
+  const blocos = texto.split(/<STMTTRN>/i).slice(1);
+  const transacoes = [];
+  blocos.forEach(bloco => {
+    const trecho = bloco.split(/<\/STMTTRN>/i)[0];
+    const pegar = tag => {
+      const m = trecho.match(new RegExp('<' + tag + '>([^<\\r\\n]*)', 'i'));
+      return m ? m[1].trim() : '';
+    };
+    const dtRaw = pegar('DTPOSTED');
+    const valorRaw = pegar('TRNAMT');
+    const tipo = pegar('TRNTYPE');
+    const memo = (pegar('MEMO') || pegar('NAME') || '(sem descrição)').replace(/\s+/g, ' ').trim();
+    if (!dtRaw || !valorRaw) return;
+
+    const ano = dtRaw.substring(0,4);
+    const mes = dtRaw.substring(4,6);
+    const dia = dtRaw.substring(6,8);
+    const dataFormatada = `${dia}/${mes}/${ano}`;
+    const valor = parseFloat(valorRaw.replace(',', '.'));
+
+    transacoes.push({ data: dataFormatada, historico: memo, tipo, valor });
+  });
+  transacoes.sort((a,b) => {
+    const da = a.data.split('/').reverse().join('');
+    const db = b.data.split('/').reverse().join('');
+    return da.localeCompare(db);
+  });
+  return transacoes;
+}
+
+function formatarMoeda(v) {
+  return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+function renderTransacoes(transacoes) {
+  tbody.innerHTML = '';
+  let totalCredito = 0, totalDebito = 0;
+
+  transacoes.forEach((t, idx) => {
+    const tr = document.createElement('tr');
+    const classe = t.valor >= 0 ? 'credito' : 'debito';
+    if (t.valor >= 0) totalCredito += t.valor; else totalDebito += Math.abs(t.valor);
+
+    const semClassificacao = !t.contaContrapartida;
+    const statusCel = t.regraAplicada
+      ? `<span style="font-size:10px; color:var(--verde); font-weight:600; white-space:nowrap;">✓ De-Para</span>`
+      : (semClassificacao ? `<button class="btn-novo-depara" data-idx="${idx}" style="background:transparent;border:1px solid var(--laranja);color:var(--laranja);font-family:inherit;font-size:10.5px;font-weight:600;padding:4px 8px;border-radius:6px;cursor:pointer;white-space:nowrap;">+ De-Para</button>` : '');
+
+    tr.innerHTML = `
+      <td>${t.data}</td>
+      <td>${escapeHtml(t.historico)}</td>
+      <td>${t.valor >= 0 ? 'Crédito' : 'Débito'}</td>
+      <td style="text-align:right" class="valor ${classe}">${formatarMoeda(t.valor)}</td>
+      <td><input class="t-contrapartida" data-idx="${idx}" value="${escapeHtml(t.contaContrapartida || '')}" placeholder="padrão do cliente" style="width:100%; font-family:inherit; font-size:11.5px; border:1px solid #d8dde3; border-radius:5px; padding:5px 6px;"></td>
+      <td><input class="t-codhist" data-idx="${idx}" value="${escapeHtml(t.codHistorico || '')}" placeholder="padrão" maxlength="3" style="width:100%; font-family:inherit; font-size:11.5px; border:1px solid #d8dde3; border-radius:5px; padding:5px 6px;"></td>
+      <td>${statusCel}</td>
+      <td><button class="btn-vincular-duplicata" data-data="${t.data}" data-valor="${Math.abs(t.valor)}">→ Duplicata</button></td>
+      <td><button class="btn-excluir-transacao" data-idx="${idx}" title="Excluir este lançamento">×</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  document.getElementById('resumo-qtd').textContent = transacoes.length;
+  document.getElementById('resumo-credito').textContent = formatarMoeda(totalCredito);
+  document.getElementById('resumo-debito').textContent = formatarMoeda(totalDebito);
+  const totalClassificados = transacoes.filter(t => t.regraAplicada).length;
+  document.getElementById('resumo-depara').textContent = `${totalClassificados}/${transacoes.length}`;
+
+  resultado.classList.add('show');
+  avisoFormato.classList.add('show');
+  document.getElementById('card-config').style.display = 'block';
+}
+
+tbody.addEventListener('click', e => {
+  const btnExcluir = e.target.closest('.btn-excluir-transacao');
+  if (btnExcluir) {
+    const idx = parseInt(btnExcluir.dataset.idx, 10);
+    transacoesAtuais.splice(idx, 1);
+    renderTransacoes(transacoesAtuais);
+    return;
+  }
+
+  const btnNovo = e.target.closest('.btn-novo-depara');
+  if (btnNovo) {
+    const idx = parseInt(btnNovo.dataset.idx, 10);
+    const t = transacoesAtuais[idx];
+    if (!t) return;
+    const regra = novaRegraDePara({ padrao: t.historico });
+    document.getElementById('tab-btn-depara').click();
+    setTimeout(() => {
+      const linhaNova = tbodyDePara.querySelector(`tr[data-id="${regra.id}"]`);
+      if (!linhaNova) return;
+      linhaNova.style.background = '#fdf1ef';
+      setTimeout(() => { linhaNova.style.background = ''; }, 2000);
+      const campoConta = linhaNova.querySelector('.dp-conta');
+      if (campoConta) campoConta.focus();
+      linhaNova.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 30);
+  }
+});
+
+// edição manual de contrapartida/código de histórico direto na tabela de transações
+tbody.addEventListener('input', e => {
+  const idx = e.target.dataset.idx;
+  if (idx === undefined) return;
+  const t = transacoesAtuais[idx];
+  if (!t) return;
+  if (e.target.classList.contains('t-contrapartida')) {
+    t.contaContrapartida = e.target.value;
+    t.regraAplicada = false;
+  }
+  if (e.target.classList.contains('t-codhist')) {
+    t.codHistorico = e.target.value;
+    t.regraAplicada = false;
+  }
+});
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+document.getElementById('btn-exportar-csv').addEventListener('click', () => {
+  if (!transacoesAtuais.length) return;
+  let csv = 'Data;Historico;Tipo;Valor;Contrapartida;CodHistorico\r\n';
+  transacoesAtuais.forEach(t => {
+    csv += `${t.data};${t.historico.replace(/;/g,',')};${t.valor >= 0 ? 'CREDIT' : 'DEBIT'};${t.valor.toFixed(2).replace('.',',')};${(t.contaContrapartida||'').replace(/;/g,',')};${(t.codHistorico||'').replace(/;/g,',')}\r\n`;
+  });
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'transacoes_extraidas.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// ---- Funções de formatação largura fixa (leiaute Cuca Fresca) ----
+function padRight(str, len) {
+  str = (str || '').toString().substring(0, len);
+  return str + ' '.repeat(len - str.length);
+}
+function padLeftZero(str, len) {
+  str = (str || '').toString().substring(0, len);
+  return '0'.repeat(len - str.length) + str;
+}
+function formatarValorPosicional(valor) {
+  // N 12, dec 2 -> valor alinhado à esquerda, sem zeros à esquerda, preenchido com espaços
+  // (confirmado com arquivo real gerado pelo Escritório Inteligente)
+  const abs = Math.abs(valor);
+  const inteiro = Math.floor(abs).toString();
+  const decimal = Math.round((abs - Math.floor(abs)) * 100).toString().padStart(2, '0');
+  return padRight(inteiro + ',' + decimal, 12);
+}
+
+document.getElementById('btn-exportar-diario').addEventListener('click', () => {
+  if (!transacoesAtuais.length) return;
+
+  const cnpj = document.getElementById('cfg-cnpj').value.trim();
+  const agilizador = document.getElementById('cfg-agilizador').value.trim();
+  const contaBanco = document.getElementById('cfg-conta-banco').value.trim();
+  const contaContra = document.getElementById('cfg-conta-contra').value.trim();
+  const histCodigo = document.getElementById('cfg-hist-codigo').value.trim() || '000';
+
+  if (!cnpj || !agilizador || !contaBanco || !contaContra) {
+    alert('Preencha CNPJ, código agilizador, conta do banco e conta de contrapartida antes de gerar o arquivo.');
+    return;
+  }
+
+  const linhas = transacoesAtuais.map(t => {
+    const entrada = t.valor >= 0;
+    const contraparte = (t.contaContrapartida && t.contaContrapartida.trim()) || contaContra;
+    const contaDevedora = entrada ? contaBanco : contraparte;
+    const contaCredora = entrada ? contraparte : contaBanco;
+    const codigoHistTransacao = (t.codHistorico && t.codHistorico.trim()) || histCodigo;
+    const descricaoParaArquivo = (t.historicoPadrao && t.historicoPadrao.trim()) || t.historico;
+
+    const campo1 = padRight(cnpj, 18);
+    const campo2 = padRight(agilizador, 5);
+    const campo3 = padRight(contaDevedora, 14);
+    const campo4 = padRight(contaCredora, 14);
+    const filler = '  '; // posições 52-53, sem uso no leiaute
+    const campo5 = padLeftZero(codigoHistTransacao, 3);
+    const campo6 = padRight('', 20); // descrição do histórico: em branco (confirmado no arquivo real, mesmo com código != 000)
+    const campo7 = padRight(t.data, 10);
+    const campo8 = formatarValorPosicional(t.valor);
+    const campo9 = padRight(descricaoParaArquivo, 250);
+
+    return campo1 + campo2 + campo3 + campo4 + filler + campo5 + campo6 + campo7 + campo8 + campo9;
+  });
+
+  const conteudo = linhas.join('\r\n') + '\r\n';
+  const blob = new Blob([conteudo], { type: 'text/plain;charset=iso-8859-1;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'diario_importacao.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// ---- Troca de abas ----
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-extrato').style.display = btn.dataset.tab === 'extrato' ? 'block' : 'none';
+    document.getElementById('view-duplicatas').style.display = btn.dataset.tab === 'duplicatas' ? 'block' : 'none';
+    document.getElementById('view-depara').style.display = btn.dataset.tab === 'depara' ? 'block' : 'none';
+    document.getElementById('view-cobrancas').style.display = btn.dataset.tab === 'cobrancas' ? 'block' : 'none';
+  });
+});
+
+// ---- Tabela editável de duplicatas ----
+const tbodyDuplicatas = document.getElementById('tbody-duplicatas');
+
+function novaLinhaDuplicata(prefill) {
+  prefill = prefill || {};
+  const tiposValidos = ['E', 'S', 'P', '1', '3'];
+  const tipoSelecionado = tiposValidos.includes((prefill.tipo || '').toUpperCase()) ? prefill.tipo.toUpperCase() : 'E';
+  const v = campo => escapeHtml(prefill[campo] || '');
+
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><select class="d-tipo">
+      <option value="E">E - Entrada</option>
+      <option value="S">S - Saída</option>
+      <option value="P">P - Serviço</option>
+      <option value="1">1 - Serviço 51</option>
+      <option value="3">3 - Serviço 53</option>
+    </select></td>
+    <td><input class="d-data-doc" placeholder="DD/MM/AAAA" maxlength="10" value="${v('dataDoc')}"></td>
+    <td><input class="d-especie" placeholder="NFE" maxlength="3" value="${v('especie')}"></td>
+    <td><input class="d-num-doc" placeholder="999999999" maxlength="9" value="${v('numDoc')}"></td>
+    <td><input class="d-cnpj" placeholder="00.000.000/0000-00" maxlength="18" value="${v('cnpj')}"></td>
+    <td><input class="d-num-baixa" placeholder="Nº parcela" maxlength="13" value="${v('numBaixa')}"></td>
+    <td><input class="d-vencimento" placeholder="DD/MM/AAAA" maxlength="10" value="${v('vencimento')}"></td>
+    <td><input class="d-valor-baixar" placeholder="0,00" value="${v('valorBaixar') || v('valorBaixado')}"></td>
+    <td><input class="d-data-baixa" placeholder="DD/MM/AAAA" maxlength="10" value="${v('dataBaixa')}"></td>
+    <td><input class="d-valor-baixado" placeholder="0,00" value="${v('valorBaixado')}"></td>
+    <td><button class="btn-remover-linha" title="Remover linha">×</button></td>
+  `;
+  tr.querySelector('.d-tipo').value = tipoSelecionado;
+  tr.querySelector('.btn-remover-linha').addEventListener('click', () => tr.remove());
+  tbodyDuplicatas.appendChild(tr);
+  return tr;
+}
+
+// ---- Vínculo: extrato → nova linha em Baixa de Duplicatas ----
+tbody.addEventListener('click', e => {
+  const btn = e.target.closest('.btn-vincular-duplicata');
+  if (!btn) return;
+
+  const linha = novaLinhaDuplicata({
+    dataBaixa: btn.dataset.data,
+    valorBaixado: btn.dataset.valor.replace('.', ',')
+  });
+
+  // troca para a aba de duplicatas
+  document.getElementById('tab-btn-duplicatas').click();
+
+  // destaca a linha nova e foca no CNPJ pra completar o resto
+  linha.style.background = '#fdf1ef';
+  setTimeout(() => { linha.style.background = ''; }, 2000);
+  const campoCnpj = linha.querySelector('.d-cnpj');
+  if (campoCnpj) campoCnpj.focus();
+  linha.scrollIntoView({ behavior: 'smooth', block: 'center' });
+});
+
+document.getElementById('btn-add-linha').addEventListener('click', novaLinhaDuplicata);
+novaLinhaDuplicata(); // começa com uma linha
+
+// ---- Importação do relatório "C/C Clientes - Débitos a Baixar (por cliente)" em PDF ----
+async function parseRelatorioDebitosBaixar(arrayBuffer) {
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  const linhasTexto = [];
+
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    const linhasMap = new Map();
+    content.items.forEach(item => {
+      const y = Math.round(item.transform[5]);
+      if (!linhasMap.has(y)) linhasMap.set(y, []);
+      linhasMap.get(y).push(item);
+    });
+    const linhasOrdenadas = Array.from(linhasMap.entries())
+      .sort((a, b) => b[0] - a[0])
+      .map(([, itens]) => itens.sort((a, b) => a.transform[4] - b.transform[4]).map(i => i.str).join(' '));
+    linhasTexto.push(...linhasOrdenadas);
+  }
+
+  const linhas = linhasTexto.map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean);
+
+  // Linha de cabeçalho de cliente: CNPJ (ou CPF) seguido do nome
+  const REGEX_HEADER_CLIENTE = /^(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}|\d{3}\.\d{3}\.\d{3}-\d{2})\s+(.+)$/;
+  // Linha de lançamento: Data Doc. | Histórico | Espécie/Número | Valor Débito Original | Saldo a Baixar | Total
+  const REGEX_LANCAMENTO = /^(\d{2}\/\d{2}\/\d{4})\s+(.+?)\s+([A-Za-z]+\/\d+)\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})\s+([\d.]+,\d{2})\s*$/;
+  const RUIDO = /cuca plus|www\.cucafresca|c\/c clientes|per[ií]odo de:|total de todos os clientes|^data doc\.|f\.social:|c[oó]digo da empresa/i;
+
+  let cnpjAtual = '';
+  const registros = [];
+
+  linhas.forEach(linha => {
+    if (RUIDO.test(linha)) return;
+    if (/^\d{1,3}$/.test(linha)) return; // número de folha isolado
+
+    const mHeader = linha.match(REGEX_HEADER_CLIENTE);
+    if (mHeader) {
+      cnpjAtual = mHeader[1];
+      return;
+    }
+
+    const mLanc = linha.match(REGEX_LANCAMENTO);
+    if (mLanc && cnpjAtual) {
+      const [, dataDoc, , especieNumero, , saldoBaixar] = mLanc;
+      const [especie, numDoc] = especieNumero.split('/');
+      registros.push({
+        cnpj: cnpjAtual,
+        dataDoc,
+        especie: (especie || '').toUpperCase(),
+        numDoc: numDoc || '',
+        valorBaixar: saldoBaixar
+      });
+    }
+  });
+
+  return registros;
+}
+
+function tipoParaEspecieRelatorio(especie) {
+  const e = (especie || '').toUpperCase();
+  if (e === 'NFSE') return 'P'; // serviço
+  if (e === 'NFE') return 'E'; // entrada (produto)
+  return 'E';
+}
+
+const inputRelatorioDebitos = document.getElementById('input-relatorio-debitos');
+document.getElementById('btn-importar-relatorio-debitos').addEventListener('click', () => inputRelatorioDebitos.click());
+inputRelatorioDebitos.addEventListener('change', async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const registros = await parseRelatorioDebitosBaixar(arrayBuffer);
+    if (!registros.length) {
+      alert('Não encontrei lançamentos reconhecíveis neste PDF. Verifique se é o relatório "C/C Clientes - Débitos a Baixar (por cliente)" do Cuca Fresca.');
+      inputRelatorioDebitos.value = '';
+      return;
+    }
+    const confirmar = confirm(
+      `Foram encontrados ${registros.length} lançamento(s) neste relatório. Adicionar todos à tabela de duplicatas?\n\n` +
+      `O Tipo é preenchido automaticamente (NFSE → P - Serviço, NFE → E - Entrada) e pode ser ajustado linha a linha. ` +
+      `Vencimento, Data da baixa e Valor baixado ficam em branco — preencha conforme o pagamento for confirmado.`
+    );
+    if (!confirmar) {
+      inputRelatorioDebitos.value = '';
+      return;
+    }
+    let ultimaLinha = null;
+    registros.forEach(r => {
+      ultimaLinha = novaLinhaDuplicata({
+        tipo: tipoParaEspecieRelatorio(r.especie),
+        dataDoc: r.dataDoc,
+        especie: (r.especie || '').substring(0, 3),
+        numDoc: r.numDoc,
+        cnpj: r.cnpj,
+        valorBaixar: r.valorBaixar
+      });
+    });
+    if (ultimaLinha) ultimaLinha.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  } catch (err) {
+    alert('Não foi possível ler este PDF.');
+    console.error(err);
+  } finally {
+    inputRelatorioDebitos.value = '';
+  }
+});
+
+// ---- Colar dados de planilha (Excel) ----
+const blocoColarPlanilha = document.getElementById('bloco-colar-planilha');
+const textareaColar = document.getElementById('textarea-colar');
+
+document.getElementById('btn-colar-planilha').addEventListener('click', () => {
+  const visivel = blocoColarPlanilha.style.display !== 'none';
+  blocoColarPlanilha.style.display = visivel ? 'none' : 'block';
+  if (!visivel) textareaColar.focus();
+});
+
+document.getElementById('btn-cancelar-colagem').addEventListener('click', () => {
+  textareaColar.value = '';
+  blocoColarPlanilha.style.display = 'none';
+});
+
+document.getElementById('btn-processar-colagem').addEventListener('click', () => {
+  const texto = textareaColar.value;
+  if (!texto.trim()) return;
+
+  const linhas = texto.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const CAMPOS_ORDEM = ['tipo', 'dataDoc', 'especie', 'numDoc', 'cnpj', 'numBaixa', 'vencimento', 'valorBaixar', 'dataBaixa', 'valorBaixado'];
+  let ultimaLinhaCriada = null;
+  let totalCriadas = 0;
+
+  linhas.forEach(linha => {
+    // aceita colado do Excel (tabs) ou separado por ; — detecta automaticamente
+    const separador = linha.includes('\t') ? '\t' : ';';
+    const valores = linha.split(separador).map(v => v.trim());
+    if (!valores.some(v => v)) return; // linha vazia
+
+    const prefill = {};
+    CAMPOS_ORDEM.forEach((campo, i) => { prefill[campo] = valores[i] || ''; });
+    ultimaLinhaCriada = novaLinhaDuplicata(prefill);
+    totalCriadas++;
+  });
+
+  textareaColar.value = '';
+  blocoColarPlanilha.style.display = 'none';
+
+  if (totalCriadas > 0 && ultimaLinhaCriada) {
+    ultimaLinhaCriada.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+});
+
+// ---- Geração do arquivo de baixa de duplicatas ----
+function formatarValorPosicional13(valorStr) {
+  // N 13, dec 2 -> 10 dígitos inteiros + vírgula + 2 decimais = 13 posições
+  const valor = parseFloat((valorStr || '0').toString().replace(/\./g, '').replace(',', '.')) || 0;
+  const abs = Math.abs(valor);
+  const inteiro = Math.floor(abs).toString();
+  const decimal = Math.round((abs - Math.floor(abs)) * 100).toString().padStart(2, '0');
+  return padLeftZero(inteiro, 10) + ',' + decimal;
+}
+
+document.getElementById('btn-exportar-duplicatas').addEventListener('click', () => {
+  const cnpjEmpresa = document.getElementById('dup-cnpj-empresa').value.trim();
+  const contaPagamento = document.getElementById('dup-conta-pagamento').value.trim();
+
+  if (!cnpjEmpresa || !contaPagamento) {
+    alert('Preencha o CNPJ da empresa e o número da conta de pagamento antes de gerar o arquivo.');
+    return;
+  }
+
+  const linhasTabela = Array.from(tbodyDuplicatas.querySelectorAll('tr'));
+  if (!linhasTabela.length) {
+    alert('Adicione ao menos uma duplicata antes de gerar o arquivo.');
+    return;
+  }
+
+  const linhasArquivo = linhasTabela.map(tr => {
+    const tipo = tr.querySelector('.d-tipo').value;
+    const dataDoc = tr.querySelector('.d-data-doc').value.trim();
+    const especie = tr.querySelector('.d-especie').value.trim();
+    const numDoc = tr.querySelector('.d-num-doc').value.trim();
+    const cnpj = tr.querySelector('.d-cnpj').value.trim();
+    const numBaixa = tr.querySelector('.d-num-baixa').value.trim();
+    const vencimento = tr.querySelector('.d-vencimento').value.trim();
+    const valorBaixar = tr.querySelector('.d-valor-baixar').value.trim();
+    const dataBaixa = tr.querySelector('.d-data-baixa').value.trim();
+    const valorBaixado = tr.querySelector('.d-valor-baixado').value.trim();
+
+    const c1 = padRight(cnpjEmpresa, 18);
+    const c2 = padRight(tipo, 1);
+    const c3 = padRight(dataDoc, 10);
+    const c4 = padRight(especie, 3);
+    const gap1 = ' '.repeat(7);   // posições 33-39
+    const c7 = padRight(numDoc, 9);
+    const gap2 = ' '.repeat(9);   // posições 49-57
+    const c9 = padRight(cnpj, 18);
+    const gap3 = ' '.repeat(8);   // posições 76-83
+    const c10 = padRight(numBaixa, 13);
+    const c11 = padRight(vencimento, 10); // dedução: 97-106
+    const c12 = formatarValorPosicional13(valorBaixar);
+    const c13 = padRight(contaPagamento, 9);
+    const gap4 = ' '.repeat(22);  // posições 129-150 (centro de custo, histórico, nº cheque - opcionais)
+    const c17 = padRight(dataBaixa, 10);
+    const c18 = formatarValorPosicional13(valorBaixado);
+
+    return c1+c2+c3+c4+gap1+c7+gap2+c9+gap3+c10+c11+c12+c13+gap4+c17+c18;
+  });
+
+  const conteudo = linhasArquivo.join('\r\n') + '\r\n';
+  const blob = new Blob([conteudo], { type: 'text/plain;charset=iso-8859-1;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'baixa_duplicatas.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('btn-limpar').addEventListener('click', () => {
+  transacoesAtuais = [];
+  tbody.innerHTML = '';
+  resultado.classList.remove('show');
+  filenameEl.textContent = '';
+  inputOfx.value = '';
+});
+
+// ---- De-Para (histórico → conta contábil / código de histórico), com regras separadas por cliente ----
+const CHAVE_STORAGE_PERFIS = 'processadorOfx_deParas_perfis_v1';
+const CHAVE_STORAGE_PERFIL_ATUAL = 'processadorOfx_deParas_perfilAtual_v1';
+const CHAVE_STORAGE_DEPARA_LEGADO = 'processadorOfx_deParas'; // formato antigo (lista única, sem cliente)
+const CHAVE_STORAGE_SYNC_URL = 'processadorOfx_deParas_syncUrl_v1';
+const CHAVE_STORAGE_SYNC_SENHA = 'processadorOfx_deParas_syncSenha_v1';
+
+let perfisDePara = {};   // { id: { nome: 'Nome do Cliente', regras: [...] } }
+let perfilAtualId = '';
+let regrasDePara = [];   // sempre aponta para perfisDePara[perfilAtualId].regras
+let syncUrlDePara = '';
+let syncSenhaDePara = '';
+let syncTimeoutId = null;
+
+function gerarIdPerfil() {
+  return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function persistirPerfisDePara() {
+  try {
+    localStorage.setItem(CHAVE_STORAGE_PERFIS, JSON.stringify(perfisDePara));
+  } catch (err) {
+    console.error('Não foi possível salvar os clientes de De-Para neste navegador.', err);
+  }
+  agendarSincronizacaoDePara();
+}
+
+function salvarPerfilAtualSelecionado() {
+  try {
+    localStorage.setItem(CHAVE_STORAGE_PERFIL_ATUAL, perfilAtualId);
+  } catch (err) { /* ignora */ }
+}
+
+// ---- Sincronização em nuvem via Apps Script (opcional) ----
+const statusSyncEl = document.getElementById('depara-sync-status');
+const inputSyncUrlEl = document.getElementById('depara-sync-url');
+const inputSyncSenhaEl = document.getElementById('depara-sync-senha');
+
+function definirStatusSync(texto, cor) {
+  if (!statusSyncEl) return;
+  statusSyncEl.textContent = texto;
+  statusSyncEl.style.color = cor || 'var(--cinza)';
+}
+
+function agendarSincronizacaoDePara() {
+  if (!syncUrlDePara) return;
+  definirStatusSync('Alterações pendentes de sincronizar…');
+  if (syncTimeoutId) clearTimeout(syncTimeoutId);
+  syncTimeoutId = setTimeout(enviarParaNuvemDePara, 900);
+}
+
+function enviarParaNuvemDePara() {
+  if (!syncUrlDePara) return;
+  definirStatusSync('Sincronizando…');
+  fetch(syncUrlDePara, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // evita preflight CORS no Apps Script
+    body: JSON.stringify({ action: 'salvarTudo', senha: syncSenhaDePara, perfis: perfisDePara })
+  })
+    .then(r => r.json())
+    .then(resp => {
+      if (resp && resp.ok) {
+        const agora = new Date();
+        definirStatusSync(`✓ Sincronizado às ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`, 'var(--verde)');
+      } else if (resp && resp.erro === 'senha inválida') {
+        definirStatusSync('⚠ Senha incorreta — corrija ao lado do link', 'var(--vermelho)');
+      } else {
+        definirStatusSync('⚠ Erro ao sincronizar (resposta inesperada do Apps Script)', 'var(--vermelho)');
+      }
+    })
+    .catch(err => {
+      console.error('Falha ao sincronizar De-Para com a planilha.', err);
+      definirStatusSync('⚠ Falha ao sincronizar — verifique o link e a conexão', 'var(--vermelho)');
+    });
+}
+
+function buscarDaNuvemDePara(mostrarStatus) {
+  if (!syncUrlDePara) return Promise.resolve(false);
+  if (mostrarStatus) definirStatusSync('Buscando dados da planilha…');
+  return fetch(syncUrlDePara + '?action=listarTudo&senha=' + encodeURIComponent(syncSenhaDePara))
+    .then(r => r.json())
+    .then(resp => {
+      if (resp && resp.erro === 'senha inválida') {
+        if (mostrarStatus) definirStatusSync('⚠ Senha incorreta — corrija ao lado do link', 'var(--vermelho)');
+        return false;
+      }
+      if (!resp || !resp.ok || !resp.perfis) throw new Error('resposta inesperada');
+      if (Object.keys(resp.perfis).length) {
+        perfisDePara = resp.perfis;
+        try { localStorage.setItem(CHAVE_STORAGE_PERFIS, JSON.stringify(perfisDePara)); } catch (err) { /* ignora */ }
+      }
+      if (mostrarStatus) definirStatusSync('✓ Dados atualizados da planilha', 'var(--verde)');
+      return true;
+    })
+    .catch(err => {
+      console.error('Falha ao buscar De-Para da planilha.', err);
+      if (mostrarStatus) definirStatusSync('⚠ Não consegui buscar da planilha — usando dados salvos neste navegador', 'var(--vermelho)');
+      return false;
+    });
+}
+
+const URL_SYNC_PADRAO = 'https://script.google.com/macros/s/AKfycbxWxyWoqIeFlctIWf3IgT2m2Omk15dDg76KmTUHLKCZENQeIYvFB_Yru_vxmdDh4EJw/exec';
+
+if (inputSyncUrlEl) {
+  try { syncUrlDePara = localStorage.getItem(CHAVE_STORAGE_SYNC_URL) || ''; } catch (err) { syncUrlDePara = ''; }
+  if (!syncUrlDePara) syncUrlDePara = URL_SYNC_PADRAO; // já vem preenchido de fábrica; a senha continua manual por segurança
+  try { syncSenhaDePara = localStorage.getItem(CHAVE_STORAGE_SYNC_SENHA) || ''; } catch (err) { syncSenhaDePara = ''; }
+  inputSyncUrlEl.value = syncUrlDePara;
+  inputSyncSenhaEl.value = syncSenhaDePara;
+  if (syncUrlDePara) definirStatusSync('Link salvo — sincronizado ao carregar a página', 'var(--verde)');
+}
+
+document.getElementById('btn-depara-sync-salvar').addEventListener('click', () => {
+  const url = (inputSyncUrlEl.value || '').trim();
+  const senha = inputSyncSenhaEl.value || '';
+  if (!url) { alert('Cole a URL do Apps Script (a que termina em /exec) antes de salvar.'); return; }
+  if (!senha) { alert('Preencha a senha configurada no Apps Script (variável SENHA_ACESSO).'); return; }
+  if (!/^https:\/\/script\.google\.com\/.*\/exec$/.test(url)) {
+    if (!confirm('Essa URL não parece uma URL de Apps Script publicada (normalmente começa com https://script.google.com/... e termina em /exec). Salvar mesmo assim?')) return;
+  }
+  syncUrlDePara = url;
+  syncSenhaDePara = senha;
+  try { localStorage.setItem(CHAVE_STORAGE_SYNC_URL, syncUrlDePara); } catch (err) { /* ignora */ }
+  try { localStorage.setItem(CHAVE_STORAGE_SYNC_SENHA, syncSenhaDePara); } catch (err) { /* ignora */ }
+  buscarDaNuvemDePara(true).then(() => {
+    renderSeletorClienteDePara();
+    paginaAtualDePara = 1;
+    renderDePara();
+    enviarParaNuvemDePara();
+  });
+});
+
+document.getElementById('btn-depara-sync-remover').addEventListener('click', () => {
+  syncUrlDePara = '';
+  syncSenhaDePara = '';
+  try { localStorage.removeItem(CHAVE_STORAGE_SYNC_URL); } catch (err) { /* ignora */ }
+  try { localStorage.removeItem(CHAVE_STORAGE_SYNC_SENHA); } catch (err) { /* ignora */ }
+  inputSyncUrlEl.value = '';
+  inputSyncSenhaEl.value = '';
+  definirStatusSync('Sincronização desativada — usando apenas este navegador', 'var(--cinza)');
+});
+
+function carregarPerfisDePara() {
+  try {
+    const raw = localStorage.getItem(CHAVE_STORAGE_PERFIS);
+    perfisDePara = raw ? JSON.parse(raw) : {};
+    if (!perfisDePara || typeof perfisDePara !== 'object' || Array.isArray(perfisDePara)) perfisDePara = {};
+  } catch (err) {
+    console.error('Não foi possível carregar os clientes de De-Para salvos.', err);
+    perfisDePara = {};
+  }
+
+  // Migração automática do formato antigo (uma lista única de regras, sem separação por cliente)
+  if (!Object.keys(perfisDePara).length) {
+    let regrasLegado = [];
+    try {
+      const rawLegado = localStorage.getItem(CHAVE_STORAGE_DEPARA_LEGADO);
+      regrasLegado = rawLegado ? JSON.parse(rawLegado) : [];
+      if (!Array.isArray(regrasLegado)) regrasLegado = [];
+    } catch (err) { regrasLegado = []; }
+
+    const idPadrao = gerarIdPerfil();
+    perfisDePara[idPadrao] = { nome: 'Cliente padrão', regras: regrasLegado };
+    persistirPerfisDePara();
+  }
+
+  perfilAtualId = localStorage.getItem(CHAVE_STORAGE_PERFIL_ATUAL) || '';
+  if (!perfisDePara[perfilAtualId]) {
+    perfilAtualId = Object.keys(perfisDePara)[0];
+    salvarPerfilAtualSelecionado();
+  }
+  regrasDePara = perfisDePara[perfilAtualId].regras;
+}
+
+function salvarDePara() {
+  if (!perfisDePara[perfilAtualId]) return;
+  perfisDePara[perfilAtualId].regras = regrasDePara;
+  persistirPerfisDePara();
+}
+
+// Encontra a regra ativa cujo padrão aparece no histórico; entre várias, vence a mais específica (padrão mais longo)
+function encontrarRegraDePara(historico) {
+  const texto = (historico || '').toUpperCase();
+  let melhor = null;
+  regrasDePara.forEach(r => {
+    if (r.semUso) return;
+    const padrao = (r.padrao || '').trim().toUpperCase();
+    if (!padrao) return;
+    if (texto.includes(padrao) && (!melhor || padrao.length > (melhor.padrao || '').trim().length)) {
+      melhor = r;
+    }
+  });
+  return melhor;
+}
+
+// Preenche contaContrapartida/codHistorico/historicoPadrao de cada transação a partir das regras do cliente ativo
+function aplicarDePara(transacoes) {
+  transacoes.forEach(t => {
+    if (t.contaContrapartida === undefined) t.contaContrapartida = '';
+    if (t.codHistorico === undefined) t.codHistorico = '';
+    if (t.historicoPadrao === undefined) t.historicoPadrao = '';
+    if (t.regraAplicada === undefined) t.regraAplicada = false;
+
+    if (!t.contaContrapartida) {
+      const regra = encontrarRegraDePara(t.historico);
+      if (regra) {
+        t.contaContrapartida = regra.contaContabil || '';
+        t.codHistorico = regra.codHistorico || '';
+        t.historicoPadrao = regra.historicoPadrao || '';
+        t.regraAplicada = true;
+      }
+    }
+  });
+}
+
+// ---- Seletor de cliente ativo (topo da ferramenta, vale para as duas abas) ----
+const seletorClienteDePara = document.getElementById('depara-select-cliente');
+
+function renderSeletorClienteDePara() {
+  seletorClienteDePara.innerHTML = '';
+  Object.keys(perfisDePara).forEach(id => {
+    const opt = document.createElement('option');
+    opt.value = id;
+    opt.textContent = perfisDePara[id].nome || '(sem nome)';
+    if (id === perfilAtualId) opt.selected = true;
+    seletorClienteDePara.appendChild(opt);
+  });
+}
+
+function trocarClienteAtivo(novoId) {
+  if (!perfisDePara[novoId]) return;
+  perfilAtualId = novoId;
+  salvarPerfilAtualSelecionado();
+  regrasDePara = perfisDePara[perfilAtualId].regras;
+  paginaAtualDePara = 1;
+  selecionadosDePara.clear();
+  renderDePara();
+}
+
+seletorClienteDePara.addEventListener('change', () => trocarClienteAtivo(seletorClienteDePara.value));
+
+document.getElementById('btn-depara-novo-cliente').addEventListener('click', () => {
+  const nome = prompt('Nome do novo cliente:');
+  if (!nome || !nome.trim()) return;
+  const id = gerarIdPerfil();
+  perfisDePara[id] = { nome: nome.trim(), regras: [] };
+  persistirPerfisDePara();
+  renderSeletorClienteDePara();
+  trocarClienteAtivo(id);
+});
+
+document.getElementById('btn-depara-renomear-cliente').addEventListener('click', () => {
+  const atual = perfisDePara[perfilAtualId];
+  if (!atual) return;
+  const novoNome = prompt('Novo nome para este cliente:', atual.nome);
+  if (!novoNome || !novoNome.trim()) return;
+  atual.nome = novoNome.trim();
+  persistirPerfisDePara();
+  renderSeletorClienteDePara();
+});
+
+document.getElementById('btn-depara-excluir-cliente').addEventListener('click', () => {
+  const ids = Object.keys(perfisDePara);
+  if (ids.length <= 1) {
+    alert('Não é possível excluir o único cliente cadastrado.');
+    return;
+  }
+  const atual = perfisDePara[perfilAtualId];
+  if (!confirm(`Excluir o cliente "${atual.nome}" e todas as suas regras de De-Para? Essa ação não pode ser desfeita.`)) return;
+  delete perfisDePara[perfilAtualId];
+  persistirPerfisDePara();
+  const proximoId = Object.keys(perfisDePara)[0];
+  renderSeletorClienteDePara();
+  trocarClienteAtivo(proximoId);
+});
+
+const tbodyDePara = document.getElementById('tbody-depara');
+const inputBuscaDePara = document.getElementById('depara-busca');
+const avisoDeParaVazio = document.getElementById('depara-vazio');
+const checkboxApenasPendentes = document.getElementById('depara-apenas-pendentes');
+const checkboxDefinirTodasSemUso = document.getElementById('depara-definir-todas-sem-uso');
+const seletorPorPagina = document.getElementById('depara-por-pagina');
+const checkboxSelecionarTodasDePara = document.getElementById('depara-selecionar-todas');
+const resumoPaginacaoDePara = document.getElementById('depara-resumo-paginacao');
+const botoesPaginacaoDePara = document.getElementById('depara-paginacao-botoes');
+
+let paginaAtualDePara = 1;
+const selecionadosDePara = new Set();
+
+
+function listaFiltradaDePara() {
+  const filtro = (inputBuscaDePara.value || '').trim().toLowerCase();
+  const apenasPendentes = checkboxApenasPendentes.checked;
+  return regrasDePara.filter(r => {
+    if (filtro && !(r.padrao || '').toLowerCase().includes(filtro)) return false;
+    if (apenasPendentes && (r.contaContabil || '').trim()) return false;
+    return true;
+  });
+}
+
+function renderDePara() {
+  avisoDeParaVazio.style.display = regrasDePara.length ? 'none' : 'block';
+
+  const lista = listaFiltradaDePara();
+  const porPagina = parseInt(seletorPorPagina.value, 10) || 25;
+  const totalPaginas = Math.max(1, Math.ceil(lista.length / porPagina));
+  if (paginaAtualDePara > totalPaginas) paginaAtualDePara = totalPaginas;
+  if (paginaAtualDePara < 1) paginaAtualDePara = 1;
+
+  const inicio = (paginaAtualDePara - 1) * porPagina;
+  const paginaAtualLista = lista.slice(inicio, inicio + porPagina);
+
+  tbodyDePara.innerHTML = '';
+  paginaAtualLista.forEach(r => {
+    const tr = document.createElement('tr');
+    tr.dataset.id = r.id;
+    tr.innerHTML = `
+      <td style="text-align:center"><input type="checkbox" class="dp-selecionar" ${selecionadosDePara.has(r.id) ? 'checked' : ''}></td>
+      <td><input class="dp-padrao" value="${escapeHtml(r.padrao)}" placeholder="Ex: TARIFA PACOTE SERVICOS"></td>
+      <td><input class="dp-conta" value="${escapeHtml(r.contaContabil)}" placeholder="999.999-9 9999" maxlength="14"></td>
+      <td><input class="dp-codhist" value="${escapeHtml(r.codHistorico)}" placeholder="000" maxlength="3"></td>
+      <td><input class="dp-histpadrao" value="${escapeHtml(r.historicoPadrao)}" placeholder="Opcional"></td>
+      <td style="text-align:center"><input type="checkbox" class="dp-semuso" ${r.semUso ? 'checked' : ''}></td>
+      <td><button class="btn-remover-linha" title="Remover regra">×</button></td>
+    `;
+    tbodyDePara.appendChild(tr);
+  });
+
+  checkboxSelecionarTodasDePara.checked = paginaAtualLista.length > 0 && paginaAtualLista.every(r => selecionadosDePara.has(r.id));
+
+  const mostrandoDe = lista.length ? inicio + 1 : 0;
+  const mostrandoAte = Math.min(inicio + porPagina, lista.length);
+  resumoPaginacaoDePara.textContent = `Mostrando de ${mostrandoDe} até ${mostrandoAte} de ${lista.length} registro(s)`;
+  document.getElementById('pm-contagem').textContent = `${selecionadosDePara.size} regra(s) selecionada(s)`;
+
+  botoesPaginacaoDePara.innerHTML = '';
+  const btnAnterior = document.createElement('button');
+  btnAnterior.className = 'limpar';
+  btnAnterior.style.cssText = 'padding:5px 12px; font-size:12px;';
+  btnAnterior.textContent = '‹ Anterior';
+  btnAnterior.disabled = paginaAtualDePara <= 1;
+  btnAnterior.addEventListener('click', () => { paginaAtualDePara--; renderDePara(); });
+  botoesPaginacaoDePara.appendChild(btnAnterior);
+
+  const paginaLabel = document.createElement('span');
+  paginaLabel.style.cssText = 'font-size:12px; color:var(--cinza); padding:0 6px;';
+  paginaLabel.textContent = `Página ${paginaAtualDePara} de ${totalPaginas}`;
+  botoesPaginacaoDePara.appendChild(paginaLabel);
+
+  const btnProximo = document.createElement('button');
+  btnProximo.className = 'limpar';
+  btnProximo.style.cssText = 'padding:5px 12px; font-size:12px;';
+  btnProximo.textContent = 'Próximo ›';
+  btnProximo.disabled = paginaAtualDePara >= totalPaginas;
+  btnProximo.addEventListener('click', () => { paginaAtualDePara++; renderDePara(); });
+  botoesPaginacaoDePara.appendChild(btnProximo);
+}
+
+function novaRegraDePara(prefill) {
+  prefill = prefill || {};
+  const regra = {
+    id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+    padrao: prefill.padrao || '',
+    contaContabil: prefill.contaContabil || '',
+    codHistorico: prefill.codHistorico || '',
+    historicoPadrao: prefill.historicoPadrao || '',
+    semUso: false
+  };
+  regrasDePara.push(regra);
+  salvarDePara();
+  return regra;
+}
+
+tbodyDePara.addEventListener('input', e => {
+  const tr = e.target.closest('tr');
+  if (!tr) return;
+  const regra = regrasDePara.find(r => r.id === tr.dataset.id);
+  if (!regra) return;
+  if (e.target.classList.contains('dp-padrao')) regra.padrao = e.target.value;
+  if (e.target.classList.contains('dp-conta')) regra.contaContabil = e.target.value;
+  if (e.target.classList.contains('dp-codhist')) regra.codHistorico = e.target.value;
+  if (e.target.classList.contains('dp-histpadrao')) regra.historicoPadrao = e.target.value;
+  salvarDePara();
+});
+
+tbodyDePara.addEventListener('change', e => {
+  const tr = e.target.closest('tr');
+  if (!tr) return;
+  const regra = regrasDePara.find(r => r.id === tr.dataset.id);
+  if (!regra) return;
+
+  if (e.target.classList.contains('dp-semuso')) {
+    regra.semUso = e.target.checked;
+    salvarDePara();
+  }
+
+  if (e.target.classList.contains('dp-selecionar')) {
+    if (e.target.checked) selecionadosDePara.add(regra.id);
+    else selecionadosDePara.delete(regra.id);
+    checkboxSelecionarTodasDePara.checked = Array.from(tbodyDePara.querySelectorAll('.dp-selecionar')).every(c => c.checked);
+    document.getElementById('pm-contagem').textContent = `${selecionadosDePara.size} regra(s) selecionada(s)`;
+  }
+});
+
+tbodyDePara.addEventListener('click', e => {
+  const btn = e.target.closest('.btn-remover-linha');
+  if (!btn) return;
+  const tr = btn.closest('tr');
+  selecionadosDePara.delete(tr.dataset.id);
+  regrasDePara = regrasDePara.filter(r => r.id !== tr.dataset.id);
+  salvarDePara();
+  renderDePara();
+});
+
+checkboxSelecionarTodasDePara.addEventListener('change', () => {
+  const idsVisiveis = Array.from(tbodyDePara.querySelectorAll('tr')).map(tr => tr.dataset.id);
+  if (checkboxSelecionarTodasDePara.checked) idsVisiveis.forEach(id => selecionadosDePara.add(id));
+  else idsVisiveis.forEach(id => selecionadosDePara.delete(id));
+  renderDePara();
+});
+
+inputBuscaDePara.addEventListener('input', () => { paginaAtualDePara = 1; renderDePara(); });
+checkboxApenasPendentes.addEventListener('change', () => { paginaAtualDePara = 1; renderDePara(); });
+seletorPorPagina.addEventListener('change', () => { paginaAtualDePara = 1; renderDePara(); });
+
+checkboxDefinirTodasSemUso.addEventListener('change', () => {
+  const marcar = checkboxDefinirTodasSemUso.checked;
+  const idsVisiveis = new Set(listaFiltradaDePara().map(r => r.id));
+  regrasDePara.forEach(r => { if (idsVisiveis.has(r.id)) r.semUso = marcar; });
+  salvarDePara();
+  renderDePara();
+  checkboxDefinirTodasSemUso.checked = false;
+});
+
+document.getElementById('btn-depara-add').addEventListener('click', () => {
+  const regra = novaRegraDePara();
+  inputBuscaDePara.value = '';
+  checkboxApenasPendentes.checked = false;
+  paginaAtualDePara = 1;
+  renderDePara();
+  const linhaNova = tbodyDePara.querySelector(`tr[data-id="${regra.id}"]`);
+  if (linhaNova) {
+    const campoPadrao = linhaNova.querySelector('.dp-padrao');
+    if (campoPadrao) campoPadrao.focus();
+    linhaNova.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+});
+
+// ---- Preencher Múltiplas Contas (aplica conta contábil e/ou cód. hist. às regras selecionadas) ----
+const blocoPreencherMultiplas = document.getElementById('bloco-preencher-multiplas');
+document.getElementById('btn-depara-preencher-multiplas').addEventListener('click', () => {
+  const visivel = blocoPreencherMultiplas.style.display !== 'none';
+  blocoPreencherMultiplas.style.display = visivel ? 'none' : 'block';
+  document.getElementById('pm-contagem').textContent = `${selecionadosDePara.size} regra(s) selecionada(s)`;
+});
+
+document.getElementById('btn-pm-cancelar').addEventListener('click', () => {
+  blocoPreencherMultiplas.style.display = 'none';
+  document.getElementById('pm-conta').value = '';
+  document.getElementById('pm-codhist').value = '';
+});
+
+document.getElementById('btn-pm-aplicar').addEventListener('click', () => {
+  if (!selecionadosDePara.size) {
+    alert('Selecione ao menos uma regra na tabela (caixinha na primeira coluna) antes de aplicar.');
+    return;
+  }
+  const novaConta = document.getElementById('pm-conta').value.trim();
+  const novoCodHist = document.getElementById('pm-codhist').value.trim();
+  if (!novaConta && !novoCodHist) {
+    alert('Preencha ao menos um dos dois campos (Conta contábil ou Cód. Hist.) para aplicar.');
+    return;
+  }
+  regrasDePara.forEach(r => {
+    if (!selecionadosDePara.has(r.id)) return;
+    if (novaConta) r.contaContabil = novaConta;
+    if (novoCodHist) r.codHistorico = novoCodHist;
+  });
+  salvarDePara();
+  renderDePara();
+  blocoPreencherMultiplas.style.display = 'none';
+  document.getElementById('pm-conta').value = '';
+  document.getElementById('pm-codhist').value = '';
+});
+
+document.getElementById('btn-depara-exportar').addEventListener('click', () => {
+  const conteudo = JSON.stringify(regrasDePara, null, 2);
+  const blob = new Blob([conteudo], { type: 'application/json;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `de_para_${(perfisDePara[perfilAtualId].nome || 'cliente').replace(/[^a-z0-9]+/gi, '_')}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+const inputDeParaImportar = document.getElementById('input-depara-importar');
+document.getElementById('btn-depara-importar').addEventListener('click', () => inputDeParaImportar.click());
+inputDeParaImportar.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      const importadas = JSON.parse(evt.target.result);
+      if (!Array.isArray(importadas)) throw new Error('formato inválido');
+      let adicionadas = 0;
+      importadas.forEach(item => {
+        if (!item || !item.padrao) return;
+        regrasDePara.push({
+          id: 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+          padrao: item.padrao || '',
+          contaContabil: item.contaContabil || '',
+          codHistorico: item.codHistorico || '',
+          historicoPadrao: item.historicoPadrao || '',
+          semUso: !!item.semUso
+        });
+        adicionadas++;
+      });
+      salvarDePara();
+      paginaAtualDePara = 1;
+      renderDePara();
+      alert(`${adicionadas} regra(s) importada(s) com sucesso para o cliente "${perfisDePara[perfilAtualId].nome}".`);
+    } catch (err) {
+      alert('Não foi possível importar este arquivo. Verifique se é um JSON exportado por esta própria ferramenta.');
+      console.error(err);
+    }
+  };
+  reader.readAsText(file, 'UTF-8');
+  inputDeParaImportar.value = '';
+});
+
+carregarPerfisDePara();
+if (syncUrlDePara) {
+  buscarDaNuvemDePara(true).then(() => {
+    renderSeletorClienteDePara();
+    paginaAtualDePara = 1;
+    renderDePara();
+  });
+} else {
+  renderSeletorClienteDePara();
+  renderDePara();
+}
+
+// ==================================================================
+// Módulo "Conversor de PDF" (composição de cobranças condominiais)
+// ==================================================================
+const ccDropzone = document.getElementById('cc-dropzone');
+const ccFileInput = document.getElementById('cc-file-input');
+const ccFilelistEl = document.getElementById('cc-filelist');
+const ccResultsCard = document.getElementById('cc-results-card');
+const ccEmptyCard = document.getElementById('cc-empty-card');
+const ccStatsEl = document.getElementById('cc-stats');
+const ccValidateBox = document.getElementById('cc-validate-box');
+const ccTbody = document.getElementById('cc-tbody');
+const ccDownloadBtn = document.getElementById('cc-download-btn');
+const ccIncludeHeaderChk = document.getElementById('cc-include-header');
+
+let ccRows = [];          // linhas extraídas (um objeto por lançamento de cobrança)
+let ccExpectedTotal = null; // { count, units, total } lido do rodapé do PDF, se encontrado
+
+// ---- Drag & drop ----
+ccDropzone.addEventListener('click', () => ccFileInput.click());
+ccDropzone.addEventListener('dragover', e => { e.preventDefault(); ccDropzone.classList.add('drag'); });
+ccDropzone.addEventListener('dragleave', () => ccDropzone.classList.remove('drag'));
+ccDropzone.addEventListener('drop', e => {
+  e.preventDefault();
+  ccDropzone.classList.remove('drag');
+  handleFilesCC(e.dataTransfer.files);
+});
+ccFileInput.addEventListener('change', e => handleFilesCC(e.target.files));
+
+async function handleFilesCC(fileList) {
+  const files = Array.from(fileList).filter(f => f.type === 'application/pdf' || f.name.toLowerCase().endsWith('.pdf'));
+  if (!files.length) return;
+
+  ccEmptyCard.style.display = 'none';
+
+  for (const file of files) {
+    const row = document.createElement('div');
+    row.className = 'cc-filerow';
+    row.innerHTML = `<span class="cc-fname">${escapeHtml(file.name)}</span><span class="cc-fstatus"><span class="cc-spinner"></span> processando…</span>`;
+    ccFilelistEl.appendChild(row);
+    const statusEl = row.querySelector('.cc-fstatus');
+
+    try {
+      const extracted = await extractPdfLinesCC(file);
+      const parsed = parseComposicaoCobrancas(extracted.lines);
+      ccRows = ccRows.concat(parsed.rows);
+      if (parsed.footerTotal) ccExpectedTotal = mergeExpectedTotalCC(ccExpectedTotal, parsed.footerTotal);
+
+      statusEl.className = 'cc-fstatus ok';
+      statusEl.textContent = `✓ ${parsed.rows.length} linha(s) extraída(s)`;
+    } catch (err) {
+      console.error(err);
+      statusEl.className = 'cc-fstatus err';
+      statusEl.textContent = '✗ erro ao processar: ' + (err.message || err);
+    }
+  }
+
+  renderResultadosCC();
+}
+
+function mergeExpectedTotalCC(current, incoming) {
+  if (!current) return incoming;
+  return {
+    count: current.count + incoming.count,
+    units: current.units + incoming.units,
+    total: round2(current.total + incoming.total)
+  };
+}
+
+// ---- Extração de texto do PDF, agrupada por linha visual ----
+async function extractPdfLinesCC(file) {
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  const lines = [];
+
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+
+    const items = content.items
+      .map(it => ({ str: it.str, x: it.transform[4], y: it.transform[5] }))
+      .filter(it => it.str && it.str.trim().length > 0);
+
+    const groups = [];
+    const tolerance = 2.2;
+    items.forEach(it => {
+      let g = groups.find(g => Math.abs(g.y - it.y) <= tolerance);
+      if (!g) {
+        g = { y: it.y, items: [] };
+        groups.push(g);
+      }
+      g.items.push(it);
+    });
+
+    groups.sort((a, b) => b.y - a.y);
+    groups.forEach(g => {
+      g.items.sort((a, b) => a.x - b.x);
+      const text = g.items.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim();
+      if (text) lines.push(text);
+    });
+  }
+
+  return { lines };
+}
+
+// ---- Lógica de parsing ----
+function parseComposicaoCobrancas(lines) {
+  const moradorRegex = /^Lt\.?\s*\d+[A-Za-z]?\s*Qd\.?\s*\d+\s*-\s*.+/i;
+  const headerRowRegex = /^Cobran[cç]a\s+Descri[cç][aã]o\s+Gera[cç][aã]o/i;
+  const footerTotalRegex = /^(\d+)\s+cobran[cç]as?\s+de\s+(\d+)\s+unidades\s+Total\s+([\d.,]+)\s*$/i;
+  const moneyRegex = /^-?\d{1,3}(?:\.\d{3})*,\d{2}$/;
+  const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+
+  let currentMorador = null;
+  const result = [];
+  let footerTotal = null;
+
+  for (const raw of lines) {
+    const line = raw.replace(/\s+/g, ' ').trim();
+    if (!line) continue;
+
+    const footerMatch = line.match(footerTotalRegex);
+    if (footerMatch) {
+      footerTotal = {
+        count: parseInt(footerMatch[1], 10),
+        units: parseInt(footerMatch[2], 10),
+        total: parseMoneyBR(footerMatch[3])
+      };
+      continue;
+    }
+
+    if (headerRowRegex.test(line)) continue;
+
+    if (moradorRegex.test(line)) {
+      currentMorador = line;
+      continue;
+    }
+
+    const tokens = line.split(' ');
+    if (tokens.length < 6) continue;
+
+    const last = tokens[tokens.length - 1];
+    if (!moneyRegex.test(last)) continue;
+
+    const dateTokens = tokens.slice(tokens.length - 5, tokens.length - 1);
+    if (dateTokens.length < 4 || !dateTokens.every(t => dateRegex.test(t))) continue;
+
+    if (!currentMorador) continue; // segurança: ignora linhas de dado sem morador identificado
+
+    const [geracao, vencimento, liquidacao, credito] = dateTokens;
+    let rest = tokens.slice(0, tokens.length - 5);
+    let cobranca = '';
+    if (rest.length && /^\d{3,7}$/.test(rest[0])) {
+      cobranca = rest[0];
+      rest = rest.slice(1);
+    }
+    const descricao = rest.join(' ').trim();
+    if (!descricao) continue;
+
+    result.push({
+      morador: currentMorador,
+      cobranca,
+      descricao,
+      geracao, vencimento, liquidacao, credito,
+      valor: last
+    });
+  }
+
+  return { rows: result, footerTotal };
+}
+
+function parseMoneyBR(str) {
+  return parseFloat(str.replace(/\./g, '').replace(',', '.'));
+}
+function round2(n) { return Math.round(n * 100) / 100; }
+
+// ---- Renderização ----
+function renderResultadosCC() {
+  if (!ccRows.length) {
+    ccResultsCard.style.display = 'none';
+    ccEmptyCard.style.display = 'block';
+    ccEmptyCard.querySelector('.rodape-nota').textContent = 'Nenhuma linha de cobrança foi reconhecida nos arquivos enviados.';
+    return;
+  }
+  ccResultsCard.style.display = 'block';
+
+  const moradores = new Set(ccRows.map(r => r.morador));
+  const somaValor = round2(ccRows.reduce((s, r) => s + parseMoneyBR(r.valor), 0));
+
+  ccStatsEl.innerHTML = `
+    <div class="cc-stat"><div class="cc-num">${ccRows.length}</div><div class="cc-lbl">linhas de cobrança</div></div>
+    <div class="cc-stat"><div class="cc-num">${moradores.size}</div><div class="cc-lbl">moradores/unidades</div></div>
+    <div class="cc-stat"><div class="cc-num">${formatBRL(somaValor)}</div><div class="cc-lbl">soma dos valores</div></div>
+  `;
+
+  if (ccExpectedTotal) {
+    const diff = round2(somaValor - ccExpectedTotal.total);
+    if (Math.abs(diff) < 0.01) {
+      ccValidateBox.innerHTML = `<div class="cc-validate ok">✓ Confere com o total do relatório: ${ccExpectedTotal.count} cobranças de ${ccExpectedTotal.units} unidades, R$ ${formatBRL(ccExpectedTotal.total)}.</div>`;
+    } else {
+      ccValidateBox.innerHTML = `<div class="cc-validate warn">⚠ O relatório indica total de R$ ${formatBRL(ccExpectedTotal.total)} (${ccExpectedTotal.count} cobranças), mas a soma extraída aqui é R$ ${formatBRL(somaValor)} (${ccRows.length} linhas). Confira as linhas antes de exportar.</div>`;
+    }
+  } else {
+    ccValidateBox.innerHTML = '';
+  }
+
+  ccTbody.innerHTML = '';
+  ccRows.forEach((r, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="cc-morador-col">${escapeHtml(r.morador)}</td>
+      <td>${escapeHtml(r.cobranca)}</td>
+      <td class="cc-desc-col">${escapeHtml(r.descricao)}</td>
+      <td>${r.geracao}</td>
+      <td>${r.vencimento}</td>
+      <td>${r.liquidacao}</td>
+      <td>${r.credito}</td>
+      <td class="cc-num-cell">${r.valor}</td>
+      <td><button class="cc-rm-btn" title="Remover linha" data-idx="${idx}">✕</button></td>
+    `;
+    ccTbody.appendChild(tr);
+  });
+
+  ccTbody.querySelectorAll('.cc-rm-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.idx, 10);
+      ccRows.splice(idx, 1);
+      renderResultadosCC();
+    });
+  });
+
+  ccDownloadBtn.disabled = false;
+}
+
+function formatBRL(n) {
+  return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+// ---- Exportação em Excel ----
+ccDownloadBtn.addEventListener('click', () => {
+  if (!ccRows.length) return;
+  const includeHeader = ccIncludeHeaderChk.checked;
+  const linhasParaExportar = montarLinhasExportacaoCC(ccRows);
+
+  const aoa = [];
+  if (includeHeader) {
+    aoa.push(['Morador', 'Cobrança', 'Descrição', 'Geração', 'Vencimento', 'Liquidação', 'Crédito', 'Valor']);
+  }
+  linhasParaExportar.forEach(r => {
+    aoa.push([
+      r.morador,
+      r.cobranca ? Number(r.cobranca) : '',
+      r.descricao,
+      r.geracao ? parseDateBRCC(r.geracao) : '',
+      r.vencimento ? parseDateBRCC(r.vencimento) : '',
+      r.liquidacao ? parseDateBRCC(r.liquidacao) : '',
+      parseDateBRCC(r.credito),
+      r.valor
+    ]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa, { cellDates: true });
+  ws['!cols'] = [
+    { wch: 55 }, { wch: 11 }, { wch: 38 }, { wch: 11 }, { wch: 11 }, { wch: 11 }, { wch: 11 }, { wch: 11 }
+  ];
+
+  const startRow = includeHeader ? 1 : 0;
+  const dateCols = ['D', 'E', 'F', 'G'];
+  for (let i = 0; i < linhasParaExportar.length; i++) {
+    const excelRow = startRow + i + 1;
+    dateCols.forEach(col => {
+      const ref = col + excelRow;
+      if (ws[ref]) ws[ref].z = 'dd/mm/yyyy';
+    });
+    const hRef = 'H' + excelRow;
+    if (ws[hRef]) ws[hRef].z = '0.00';
+  }
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Cobranças');
+
+  const ts = new Date();
+  const stamp = `${ts.getFullYear()}${padCC(ts.getMonth() + 1)}${padCC(ts.getDate())}`;
+  XLSX.writeFile(wb, `Composicao_Cobrancas_${stamp}.xlsx`);
+});
+
+// Monta as linhas finais para o Excel: lançamentos normais ficam um por linha;
+// "Taxa Associativa" é agrupada e somada por Data de Crédito (demais campos em branco).
+function montarLinhasExportacaoCC(rows) {
+  const normais = [];
+  const somaPorCredito = new Map(); // credito (dd/mm/aaaa) -> soma acumulada
+
+  rows.forEach(r => {
+    const ehTaxaAssociativa = (r.descricao || '').trim().toLowerCase() === 'taxa associativa';
+    if (ehTaxaAssociativa) {
+      const atual = somaPorCredito.get(r.credito) || 0;
+      somaPorCredito.set(r.credito, round2(atual + parseMoneyBR(r.valor)));
+    } else {
+      normais.push({
+        morador: r.morador,
+        cobranca: r.cobranca,
+        descricao: r.descricao,
+        geracao: r.geracao,
+        vencimento: r.vencimento,
+        liquidacao: r.liquidacao,
+        credito: r.credito,
+        valor: parseMoneyBR(r.valor)
+      });
+    }
+  });
+
+  const agrupadasTaxa = Array.from(somaPorCredito.entries())
+    .sort((a, b) => parseDateBRCC(a[0]) - parseDateBRCC(b[0]))
+    .map(([credito, soma]) => ({
+      morador: '',
+      cobranca: '',
+      descricao: 'Taxa Associativa',
+      geracao: '',
+      vencimento: '',
+      liquidacao: '',
+      credito,
+      valor: soma
+    }));
+
+  return normais.concat(agrupadasTaxa);
+}
+
+
+
+function parseDateBRCC(str) {
+  const [d, m, y] = str.split('/').map(Number);
+  return new Date(Date.UTC(y, m - 1, d));
+}
+function padCC(n) { return String(n).padStart(2, '0'); }
+
+</script>
+
+</body>
+</html>
